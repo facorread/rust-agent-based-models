@@ -24,11 +24,11 @@ enum Health {
 
 fn main() {
     // Model parameters
-    let N0: usize = 1000; // Initial number of agents
+    let n0: usize = 1000; // Initial number of agents
 
     // Model data: agents, patches, links
     // This software uses the Entity-Component-System architecture
-    let mut health = slotmap::SlotMap::with_capacity(2 * N0);
+    let mut health = slotmap::SlotMap::with_capacity(2 * n0);
     health.insert(Health::S);
 
     println!("Hello, world!");
