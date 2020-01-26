@@ -17,12 +17,15 @@
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
 
+use std::fs;
+// use std::fmt::Write as FmtWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
+use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
+
 // Model properties
 #[derive(Clone, Copy)]
 enum Health {
     S,
-    I,
-    R
+    I
 }
 
 // Housekeeping
@@ -48,6 +51,33 @@ fn main() {
         let id0: AgentKey = health.insert(Health::S);
         let id1 = health.insert(Health::S);
         let _link_id: LinkKey = links.insert((id0, id1));
+    }
+
+    let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
+    writeln!(&mut ts_file, "Time step, Number of agents N, Susceptibles S, Infected I").expect("Error writing time series output file");
+    let mut time_step = 0;
+    loop {
+        // Model measurements
+        {
+            let mut s = 0;
+            let mut i = 0;
+            for h in health.values() {
+                match h {
+                    Health::S => s = s + 1,
+                    Health::I => i = i + 1
+                }
+            }
+            writeln!(&mut ts_file, "{},{},{},{}", time_step, health.len(), s, i).expect("Error writing time series output file");
+        }
+
+        time_step = time_step + 1;
+        if time_step == 1000 {
+            break;
+        }
+
+        // Model interactions
+        // Agent level: Death or recovery
+
         // let mut degree = slotmap::SecondaryMap::with_capacity(2 * n0);
         // degree.insert(id0, 1);
         // degree.insert(id1, 1);
@@ -55,6 +85,7 @@ fn main() {
         //     let newId = health.insert(Health::S);
 
         // }
+
     }
 
     println!("Hello, world!");
