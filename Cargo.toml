@@ -1,5 +1,5 @@
 [package]
-name = "RustAgentModels"
+name = "rust-agent-based-models"
 version = "0.1.0"
 authors = ["Fabio A. Correa Duran <facorread@gmail.com>"]
 edition = "2018"
@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 slotmap = "0.4.0"
+# rand =  "0.7.3"

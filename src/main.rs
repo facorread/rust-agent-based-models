@@ -15,6 +15,9 @@
    limitations under the License.
 */
 
+///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
+
+// Model properties
 #[derive(Clone, Copy)]
 enum Health {
     S,
@@ -22,14 +25,37 @@ enum Health {
     R
 }
 
+// Housekeeping
+slotmap::new_key_type! {
+    struct AgentKey;
+    struct LinkKey;
+}
+
 fn main() {
     // Model parameters
-    let n0: usize = 1000; // Initial number of agents
+    // Initial number of agents
+    let n0: usize = 1000;
 
-    // Model data: agents, patches, links
-    // This software uses the Entity-Component-System architecture
-    let mut health = slotmap::SlotMap::with_capacity(2 * n0);
-    health.insert(Health::S);
+    // Health status of agents
+    // Index: Agent id 
+    let mut health = slotmap::SlotMap::with_capacity_and_key(2 * n0);
+
+    // Bidirectional links between agents
+    let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
+
+    // This is the seed for a scale-free network: Two agents with a link
+    {
+        let id0: AgentKey = health.insert(Health::S);
+        let id1 = health.insert(Health::S);
+        let _link_id: LinkKey = links.insert((id0, id1));
+        // let mut degree = slotmap::SecondaryMap::with_capacity(2 * n0);
+        // degree.insert(id0, 1);
+        // degree.insert(id1, 1);
+        // while health.len() < n0 {
+        //     let newId = health.insert(Health::S);
+
+        // }
+    }
 
     println!("Hello, world!");
 }
