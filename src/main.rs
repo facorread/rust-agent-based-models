@@ -24,7 +24,7 @@ use std::fs;
 use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
 
 // Model properties
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum Health {
     S,
     I
@@ -53,7 +53,7 @@ fn main() {
     }
     let survival_distro = Bernoulli::new(0.3).unwrap();
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
-    writeln!(&mut ts_file, "Time step, Number of agents N, Susceptibles S, Infected I").expect("Error writing time series output file");
+    writeln!(&mut ts_file, "Time step, Number of agents N, Susceptibles S, Infected I, Maximum network degree Dmax, Average degree of susceptibles Ds, Average degree of infectious Di").expect("Error writing time series output file");
     let mut rng = rand::thread_rng();
     let mut time_step = 0;
     loop {
@@ -105,8 +105,21 @@ fn main() {
                     Health::I => i += 1
                 }
             }
-            writeln!(&mut ts_file, "{},{},{},{}", time_step, health.len(), s, i).expect("Error writing time series output file");
+            let Dmax = match weights_vec.iter().copied().max() {
+                Some(w) => w,
+                None => 0
+            };
+            let Ds = match agent_key_vec.iter().zip(weights_vec.iter()).filter(|(&k, _w)| health[k] == Health::S).max_by_key(|(_k, &w)| w) {
+                Some((_k, &w)) => w,
+                None => 0
+            };
+            let Di = match agent_key_vec.iter().zip(weights_vec.iter()).filter(|(&k, _w)| health[k] == Health::I).max_by_key(|(_k, &w)| w) {
+                Some((_k, &w)) => w,
+                None => 0
+            };
+            writeln!(&mut ts_file, "{},{},{},{}", time_step, health.len(), s, i, Dmax, Ds, Di).expect("Error writing time series output file");
         }
+        // Dynamics: Time step
         time_step = time_step + 1;
         if time_step == 1000 {
             break;
