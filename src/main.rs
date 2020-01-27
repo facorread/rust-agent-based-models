@@ -47,7 +47,9 @@ fn main() {
     while health.len() < n0 {
         let _k: AgentKey = health.insert(Health::S);
     }
+    let birth_distro = Bernoulli::new(0.01).unwrap();
     let infection_distro = Bernoulli::new(0.3).unwrap();
+    let link_distro = Bernoulli::new(0.01).unwrap();
     let recovery_distro = Bernoulli::new(0.3).unwrap();
     let survival_distro = Bernoulli::new(0.3).unwrap();
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
@@ -55,6 +57,7 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut time_step = 0;
     loop {
+        println!("                                           \rtime_step = 0 ");
         // Initialization of this time step: Network seed
         if links.is_empty() && health.len() > 1 {
             let mut h_it = health.iter();
@@ -77,12 +80,25 @@ fn main() {
                 agent_key_vec.iter().map(|k| weights_map[*k]).collect()
             };
             for agent_idx in 0..agent_key_vec.len() {
-                if weights_vec[agent_idx] == 0 {
-                    let mut dist = WeightedIndex::new(weights_vec.clone()).unwrap();
+                if weights_vec[agent_idx] == 0 || link_distro.sample(&mut rng) {
+                    let agent_key = agent_key_vec[agent_idx];
+                    let mut weights_tmp = weights_vec.clone();
+                    weights_tmp[agent_idx] = 0;
+                    for (key0, key1) in links.values() {
+                        if *key0 == agent_key {
+                            weights_tmp[agent_key_vec.iter().position(|&k| k == *key1).unwrap()] =
+                                0;
+                        }
+                        if *key1 == agent_key {
+                            weights_tmp[agent_key_vec.iter().position(|&k| k == *key0).unwrap()] =
+                                0;
+                        }
+                    }
+                    let mut dist = WeightedIndex::new(weights_tmp).unwrap();
                     let mut k = 0;
                     loop {
                         let friend_idx = dist.sample(&mut rng);
-                        links.insert((agent_key_vec[agent_idx], agent_key_vec[friend_idx]));
+                        links.insert((agent_key, agent_key_vec[friend_idx]));
                         weights_vec[agent_idx] += 1;
                         weights_vec[friend_idx] += 1;
                         k += 1;
@@ -184,6 +200,13 @@ fn main() {
             health.contains_key(*key0) && health.contains_key(*key1)
         });
         // Dynamics: New agents emerge
-        // Dynamics: New links emerge
+        let nb = health
+            .values()
+            .filter(|&&h| h == Health::S && birth_distro.sample(&mut rng))
+            .count();
+        for _ in 0..nb {
+            health.insert(Health::S);
+        }
     }
+    println!("The dataset is ready.");
 }
