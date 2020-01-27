@@ -41,15 +41,14 @@ fn main() {
     let net_k: usize = 7;
     // Model state: Agent health
     let mut health = SlotMap::with_capacity_and_key(2 * n0);
-    // Model state: Agent health the next time step
-    let mut next_health = SecondaryMap::with_capacity(health.capacity());
     // Model state: Bidirectional links between agents
     let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
     // This is the seed for a scale-free network: Two agents with a link
     while health.len() < n0 {
-        let agent_key: AgentKey = health.insert(Health::S);
-        next_health.insert(agent_key, Health::S);
+        let _k: AgentKey = health.insert(Health::S);
     }
+    let infection_distro = Bernoulli::new(0.3).unwrap();
+    let recovery_distro = Bernoulli::new(0.3).unwrap();
     let survival_distro = Bernoulli::new(0.3).unwrap();
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
     writeln!(&mut ts_file, "Time step, Number of agents n, Susceptibles s, Infected i, Maximum network degree d_max, Average degree of susceptibles d_s, Average degree of infectious d_i").expect("Error writing time series output file");
@@ -149,12 +148,40 @@ fn main() {
             break;
         }
         // Dynamics: infection spreads
-        // Dynamics: After spreading the infection, some infectious agents die
-        health.retain(|_agent_key, h| match h {
-            Health::S => true,
-            Health::I => survival_distro.sample(&mut rng),
-        });
-        // Dynamics: Remaining agents update in parallel
+        {
+            // Model state: Agent health the next time step
+            let mut next_health = SecondaryMap::with_capacity(health.capacity());
+            for (key0, key1) in links.values().copied() {
+                if health[key0] == Health::S
+                    && health[key1] == Health::I
+                    && infection_distro.sample(&mut rng)
+                {
+                    next_health.insert(key0, Health::I);
+                }
+                if health[key1] == Health::S
+                    && health[key0] == Health::I
+                    && infection_distro.sample(&mut rng)
+                {
+                    next_health.insert(key1, Health::I);
+                }
+            }
+            health.iter().for_each(|(k, &h)| {
+                if h == Health::I && recovery_distro.sample(&mut rng) {
+                    next_health.insert(k, Health::S);
+                }
+            });
+            // Dynamics: After spreading the infection, some infectious agents die
+            health.retain(|_agent_key, h| match h {
+                Health::S => true,
+                Health::I => survival_distro.sample(&mut rng),
+            });
+            // Dynamics: Remaining agents update in parallel
+            next_health.iter().for_each(|(k, &next_h)| {
+                if let Some(h) = health.get_mut(k) {
+                    *h = next_h;
+                }
+            });
+        }
         // Dynamics: Prune network
         // Dynamics: New agents emerge
     }
