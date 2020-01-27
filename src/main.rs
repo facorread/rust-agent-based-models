@@ -16,9 +16,8 @@
 */
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
-
-use rand::distributions::{Bernoulli, Distribution, weighted::WeightedIndex};
-use slotmap::{SlotMap, SecondaryMap};
+use rand::distributions::{weighted::WeightedIndex, Bernoulli, Distribution};
+use slotmap::{SecondaryMap, SlotMap};
 use std::fs;
 // use std::fmt::Write as FmtWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
 use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
@@ -27,7 +26,7 @@ use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writel
 #[derive(Clone, Copy, PartialEq)]
 enum Health {
     S,
-    I
+    I,
 }
 
 // Housekeeping
@@ -64,60 +63,85 @@ fn main() {
             let (key1, _value) = h_it.next().unwrap();
             let _link_id: LinkKey = links.insert((key0, key1));
         }
-        // Initialization of this time step: Network
-        let agent_key_vec: Vec<AgentKey> = health.keys().collect();
-        let mut weights_vec: Vec<i32> = {
-            let mut weights_map = SecondaryMap::with_capacity(health.capacity());
-            agent_key_vec.iter().for_each(|&k| { let _ = weights_map.insert(k, 0); });
-            for (key0, key1) in links.values() {
-                weights_map[*key0] += 1;
-                weights_map[*key1] += 1;
-            }
-            agent_key_vec.iter().map(|k| weights_map[*k]).collect()
-        };
-        for agent_idx in 0..agent_key_vec.len() {
-            if weights_vec[agent_idx] == 0 {
-                let mut dist = WeightedIndex::new(weights_vec.clone()).unwrap();
-                let mut k = 0;
-                loop {
-                    let friend_idx = dist.sample(&mut rng);
-                    links.insert((agent_key_vec[agent_idx], agent_key_vec[friend_idx]));
-                    weights_vec[agent_idx] += 1;
-                    weights_vec[friend_idx] += 1;
-                    k += 1;
-                    if k == net_k {
-                        break
-                    }
-                    // Make friend ineligible for a new link
-                    if dist.update_weights(&[(friend_idx, &0)]).is_err() {
-                        break
-                    }
-                }
-            }
-        }
-        // Model measurements
         {
-            let mut s = 0;
-            let mut i = 0;
-            for h in health.values() {
-                match h {
-                    Health::S => s += 1,
-                    Health::I => i += 1
+            // Initialization of this time step: Network
+            let agent_key_vec: Vec<AgentKey> = health.keys().collect();
+            let mut weights_vec: Vec<i32> = {
+                let mut weights_map = SecondaryMap::with_capacity(health.capacity());
+                agent_key_vec.iter().for_each(|&k| {
+                    let _ = weights_map.insert(k, 0);
+                });
+                for (key0, key1) in links.values() {
+                    weights_map[*key0] += 1;
+                    weights_map[*key1] += 1;
+                }
+                agent_key_vec.iter().map(|k| weights_map[*k]).collect()
+            };
+            for agent_idx in 0..agent_key_vec.len() {
+                if weights_vec[agent_idx] == 0 {
+                    let mut dist = WeightedIndex::new(weights_vec.clone()).unwrap();
+                    let mut k = 0;
+                    loop {
+                        let friend_idx = dist.sample(&mut rng);
+                        links.insert((agent_key_vec[agent_idx], agent_key_vec[friend_idx]));
+                        weights_vec[agent_idx] += 1;
+                        weights_vec[friend_idx] += 1;
+                        k += 1;
+                        if k == net_k {
+                            break;
+                        }
+                        // Make friend ineligible for a new link
+                        if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                            break;
+                        }
+                    }
                 }
             }
-            let d_max = match weights_vec.iter().copied().max() {
-                Some(w) => w,
-                None => 0
-            };
-            let d_s = match agent_key_vec.iter().zip(weights_vec.iter()).filter(|(&k, _w)| health[k] == Health::S).max_by_key(|(_k, &w)| w) {
-                Some((_k, &w)) => w,
-                None => 0
-            };
-            let d_i = match agent_key_vec.iter().zip(weights_vec.iter()).filter(|(&k, _w)| health[k] == Health::I).max_by_key(|(_k, &w)| w) {
-                Some((_k, &w)) => w,
-                None => 0
-            };
-            writeln!(&mut ts_file, "{},{},{},{},{},{},{}", time_step, health.len(), s, i, d_max, d_s, d_i).expect("Error writing time series output file");
+            // Model measurements
+            {
+                let mut s = 0;
+                let mut i = 0;
+                for h in health.values() {
+                    match h {
+                        Health::S => s += 1,
+                        Health::I => i += 1,
+                    }
+                }
+                let d_max = match weights_vec.iter().copied().max() {
+                    Some(w) => w,
+                    None => 0,
+                };
+                let d_s = match agent_key_vec
+                    .iter()
+                    .zip(weights_vec.iter())
+                    .filter(|(&k, _w)| health[k] == Health::S)
+                    .max_by_key(|(_k, &w)| w)
+                {
+                    Some((_k, &w)) => w,
+                    None => 0,
+                };
+                let d_i = match agent_key_vec
+                    .iter()
+                    .zip(weights_vec.iter())
+                    .filter(|(&k, _w)| health[k] == Health::I)
+                    .max_by_key(|(_k, &w)| w)
+                {
+                    Some((_k, &w)) => w,
+                    None => 0,
+                };
+                writeln!(
+                    &mut ts_file,
+                    "{},{},{},{},{},{},{}",
+                    time_step,
+                    health.len(),
+                    s,
+                    i,
+                    d_max,
+                    d_s,
+                    d_i
+                )
+                .expect("Error writing time series output file");
+            }
         }
         // Dynamics: Time step
         time_step = time_step + 1;
@@ -128,7 +152,7 @@ fn main() {
         // Dynamics: After spreading the infection, some infectious agents die
         health.retain(|_agent_key, h| match h {
             Health::S => true,
-            Health::I => survival_distro.sample(&mut rng)
+            Health::I => survival_distro.sample(&mut rng),
         });
         // Dynamics: Remaining agents update in parallel
         // Dynamics: Prune network
