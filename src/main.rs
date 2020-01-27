@@ -156,7 +156,7 @@ fn main() {
             }
         }
         // Dynamics: Time step
-        time_step = time_step + 1;
+        time_step += 1;
         if time_step == 1000 {
             break;
         }
