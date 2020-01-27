@@ -49,6 +49,7 @@ fn main() {
     }
     let birth_distro = Bernoulli::new(0.01).unwrap();
     let infection_distro = Bernoulli::new(0.3).unwrap();
+    let initial_infection_distro = Bernoulli::new(0.3).unwrap();
     let link_distro = Bernoulli::new(0.01).unwrap();
     let recovery_distro = Bernoulli::new(0.3).unwrap();
     let survival_distro = Bernoulli::new(0.3).unwrap();
@@ -94,20 +95,23 @@ fn main() {
                                 0;
                         }
                     }
-                    let mut dist = WeightedIndex::new(weights_tmp).unwrap();
-                    let mut k = 0;
-                    loop {
-                        let friend_idx = dist.sample(&mut rng);
-                        links.insert((agent_key, agent_key_vec[friend_idx]));
-                        weights_vec[agent_idx] += 1;
-                        weights_vec[friend_idx] += 1;
-                        k += 1;
-                        if k == net_k {
-                            break;
-                        }
-                        // Make friend ineligible for a new link
-                        if dist.update_weights(&[(friend_idx, &0)]).is_err() {
-                            break;
+                    let dist_result = WeightedIndex::new(weights_tmp);
+                    if dist_result.is_ok() {
+                        let mut dist = dist_result.unwrap();
+                        let mut k = 0;
+                        loop {
+                            let friend_idx = dist.sample(&mut rng);
+                            links.insert((agent_key, agent_key_vec[friend_idx]));
+                            weights_vec[agent_idx] += 1;
+                            weights_vec[friend_idx] += 1;
+                            k += 1;
+                            if k == net_k {
+                                break;
+                            }
+                            // Make friend ineligible for a new link
+                            if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                                break;
+                            }
                         }
                     }
                 }
@@ -165,18 +169,21 @@ fn main() {
             // Model state: Agent health the next time step
             let mut next_health = SecondaryMap::with_capacity(health.capacity());
             for (key0, key1) in links.values().copied() {
-                if health[key0] == Health::S
-                    && health[key1] == Health::I
-                    && infection_distro.sample(&mut rng)
-                {
+                let h0 = health[key0];
+                let h1 = health[key1];
+                if h0 == Health::S && h1 == Health::I && infection_distro.sample(&mut rng) {
                     next_health.insert(key0, Health::I);
                 }
-                if health[key1] == Health::S
-                    && health[key0] == Health::I
-                    && infection_distro.sample(&mut rng)
-                {
+                if h1 == Health::S && h0 == Health::I && infection_distro.sample(&mut rng) {
                     next_health.insert(key1, Health::I);
                 }
+            }
+            if time_step == 1 {
+                health.iter().for_each(|(k, &h)| {
+                    if h == Health::S && initial_infection_distro.sample(&mut rng) {
+                        next_health.insert(k, Health::I);
+                    }
+                });
             }
             health.iter().for_each(|(k, &h)| {
                 if h == Health::I && recovery_distro.sample(&mut rng) {
