@@ -57,7 +57,7 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut time_step = 0;
     loop {
-        println!("                                           \rtime_step = 0 ");
+        println!("\r                                                                         \rtime_step = {}", time_step);
         // Initialization of this time step: Network seed
         if links.is_empty() && health.len() > 1 {
             let mut h_it = health.iter();
@@ -157,7 +157,7 @@ fn main() {
         }
         // Dynamics: Time step
         time_step += 1;
-        if time_step == 1000 {
+        if time_step == 100 {
             break;
         }
         // Dynamics: infection spreads
