@@ -183,6 +183,8 @@ fn main() {
             });
         }
         // Dynamics: Prune network
+        links.retain(|_link_key, (key0, key1)| health.contains_key(key0) && health.contains_key(key1));
         // Dynamics: New agents emerge
+        // Dynamics: New links emerge
     }
 }
