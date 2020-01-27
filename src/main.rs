@@ -106,10 +106,7 @@ fn main() {
                         Health::I => i += 1,
                     }
                 }
-                let d_max = match weights_vec.iter().copied().max() {
-                    Some(w) => w,
-                    None => 0,
-                };
+                let d_max = weights_vec.iter().copied().max().unwrap_or(0);
                 let d_s = match agent_key_vec
                     .iter()
                     .zip(weights_vec.iter())
@@ -183,7 +180,9 @@ fn main() {
             });
         }
         // Dynamics: Prune network
-        links.retain(|_link_key, (key0, key1)| health.contains_key(key0) && health.contains_key(key1));
+        links.retain(|_link_key, (key0, key1)| {
+            health.contains_key(*key0) && health.contains_key(*key1)
+        });
         // Dynamics: New agents emerge
         // Dynamics: New links emerge
     }
