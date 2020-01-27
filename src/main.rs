@@ -17,7 +17,8 @@
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
 
-use rand::distributions::{Bernoulli, Distribution};
+use rand::distributions::{Bernoulli, Distribution, weighted::WeightedIndex};
+use slotmap::{SlotMap, SecondaryMap};
 use std::fs;
 // use std::fmt::Write as FmtWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
 use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
@@ -36,68 +37,88 @@ slotmap::new_key_type! {
 }
 
 fn main() {
-    // Model parameters
-    // Initial number of agents
+    // Model parameter: Initial number of agents
     let n0: usize = 1000;
-
-    // Health status of agents
-    let mut health = slotmap::SlotMap::with_capacity_and_key(2 * n0);
-
-    // Health status of agents in the next time step
-    let mut next_health = slotmap::SecondaryMap::with_capacity(health.capacity());
-
-    // Bidirectional links between agents
+    let net_k: usize = 7;
+    // Model state: Agent health
+    let mut health = SlotMap::with_capacity_and_key(2 * n0);
+    // Model state: Agent health the next time step
+    let mut next_health = SecondaryMap::with_capacity(health.capacity());
+    // Model state: Bidirectional links between agents
     let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
-
     // This is the seed for a scale-free network: Two agents with a link
-    {
-        let key0: AgentKey = health.insert(Health::S);
-        let key1 = health.insert(Health::S);
-        let _link_id: LinkKey = links.insert((key0, key1));
-        next_health.insert(key0, Health::S);
-        next_health.insert(key1, Health::S);
+    while health.len() < n0 {
+        let agent_key: AgentKey = health.insert(Health::S);
+        next_health.insert(agent_key, Health::S);
     }
-
     let survival_distro = Bernoulli::new(0.3).unwrap();
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
     writeln!(&mut ts_file, "Time step, Number of agents N, Susceptibles S, Infected I").expect("Error writing time series output file");
+    let mut rng = rand::thread_rng();
     let mut time_step = 0;
     loop {
+        // Initialization of this time step: Network seed
+        if links.is_empty() && health.len() > 1 {
+            let mut h_it = health.iter();
+            let (key0, _value) = h_it.next().unwrap();
+            let (key1, _value) = h_it.next().unwrap();
+            let _link_id: LinkKey = links.insert((key0, key1));
+        }
+        // Initialization of this time step: Network
+        let agent_key_vec: Vec<AgentKey> = health.keys().collect();
+        let mut weights_vec: Vec<i32> = {
+            let mut weights_map = SecondaryMap::with_capacity(health.capacity());
+            agent_key_vec.iter().for_each(|&k| { let _ = weights_map.insert(k, 0); });
+            for (key0, key1) in links.values() {
+                weights_map[*key0] += 1;
+                weights_map[*key1] += 1;
+            }
+            agent_key_vec.iter().map(|k| weights_map[*k]).collect()
+        };
+        for agent_idx in 0..agent_key_vec.len() {
+            if weights_vec[agent_idx] == 0 {
+                let mut dist = WeightedIndex::new(weights_vec.clone()).unwrap();
+                let mut k = 0;
+                loop {
+                    let friend_idx = dist.sample(&mut rng);
+                    links.insert((agent_key_vec[agent_idx], agent_key_vec[friend_idx]));
+                    weights_vec[agent_idx] += 1;
+                    weights_vec[friend_idx] += 1;
+                    k += 1;
+                    if k == net_k {
+                        break
+                    }
+                    // Make friend ineligible for a new link
+                    if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                        break
+                    }
+                }
+            }
+        }
         // Model measurements
         {
             let mut s = 0;
             let mut i = 0;
             for h in health.values() {
                 match h {
-                    Health::S => s = s + 1,
-                    Health::I => i = i + 1
+                    Health::S => s += 1,
+                    Health::I => i += 1
                 }
             }
             writeln!(&mut ts_file, "{},{},{},{}", time_step, health.len(), s, i).expect("Error writing time series output file");
         }
-
         time_step = time_step + 1;
         if time_step == 1000 {
             break;
         }
-
-        // Model dynamics
-        // Infection spreads
-
-        // After spreading the infection, some infectious agents die
+        // Dynamics: infection spreads
+        // Dynamics: After spreading the infection, some infectious agents die
         health.retain(|_agent_key, h| match h {
             Health::S => true,
-            Health::I => survival_distro.sample(&mut rand::thread_rng())
+            Health::I => survival_distro.sample(&mut rng)
         });
-
-        // Remaining agents update in parallel
-
-        // Prune network
-
-        // New agents emerge
-
-        // New links emerge
+        // Dynamics: Remaining agents update in parallel
+        // Dynamics: Prune network
+        // Dynamics: New agents emerge
     }
-
-    println!("Hello, world!");
 }
