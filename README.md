@@ -13,7 +13,7 @@ Agent-based models (ABM) are a computational tool of complexity science; it has 
 
 Rust is useful to write safe, fast software for a wide range of applications such as operating systems and embedded systems. Rust removes complications such as interpreters and garbage collectors. Rust trades safety and speed for a data-driven coding discipline, where a tool called the borrow checker prevents us from using patterns that invalidate memory and hurt our research. Fighting with the borrow checker for a little while is a good way to learn good coding practices.
 
-The Entity-Component-System (ECS) is a software architecture you might want to consider for your ABM. ECS is a popular design in computer games, and ABMs can benefit from this design. Catherine's West presentation, ["Using Rust for Game Development,"](https://kyren.github.io/2018/09/14/rustconf-talk.html) provides the rationale for this software. My design makes the most of the borrow checker and keeps complications at bay. The ABM does not encapsulate or hide the model data; instead, all model code resides at main(). As the model grows and changes, you will probably want to focus your work on complexity science as opposed as writing and deleting modules, interfaces, or traits to neatly "organize" your data. I have done that in the past and it was hell. Take a look at ```main.rs``` and ask the question, what proportion of this software is about the model, and what proportion is about housekeeping?
+The Entity-Component-System (ECS) is a software architecture you might want to consider for your ABM. ECS is a popular design in computer games, and ABMs can benefit from this design. Catherine's West presentation, ["Using Rust for Game Development,"](https://kyren.github.io/2018/09/14/rustconf-talk.html) provides the rationale for this software. My design makes the most of the borrow checker and keeps complications at bay. The ABM does not encapsulate or hide the model data; instead, all model code resides at main(). As the model grows and changes, I want to focus on complexity science as opposed to writing and deleting modules, interfaces, or traits to neatly "organize" my data. I have done that in the past with C++ and it never ended well. Take a look at ```main.rs``` and ask the question, what proportion of this software is about the science, and what proportion is about managing memory and other housekeeping?
 
 After you have used popular frameworks to prototype your ABM, consider using Rust over C or C++ to implement the high-performance version of your ABM.
 
@@ -36,3 +36,5 @@ Feel free to develop a crate yourself.
 ## What comes next?
 
 I will use the principles I learned to implement a virtual landscape in the form of a grid of patches. I am not committing to a specific date for this enhancement.
+
+Another future improvement is the parameter sweep, also known as BehaviorSpace in NetLogo.
