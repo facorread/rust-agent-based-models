@@ -38,6 +38,7 @@ slotmap::new_key_type! {
 fn main() {
     // Model parameter: Initial number of agents
     let n0: usize = 1000;
+    // Model parameter: Scale-free network parameter: new links per agent
     let net_k: usize = 7;
     // Model state: Agent health
     let mut health = SlotMap::with_capacity_and_key(2 * n0);
@@ -81,7 +82,14 @@ fn main() {
                 agent_key_vec.iter().map(|k| weights_map[*k]).collect()
             };
             for agent_idx in 0..agent_key_vec.len() {
-                if weights_vec[agent_idx] == 0 || link_distro.sample(&mut rng) {
+                let new_links = if weights_vec[agent_idx] == 0 {
+                    net_k
+                } else if link_distro.sample(&mut rng) {
+                    1
+                } else {
+                    0
+                };
+                if new_links > 0 {
                     let agent_key = agent_key_vec[agent_idx];
                     let mut weights_tmp = weights_vec.clone();
                     weights_tmp[agent_idx] = 0;
@@ -105,7 +113,7 @@ fn main() {
                             weights_vec[agent_idx] += 1;
                             weights_vec[friend_idx] += 1;
                             k += 1;
-                            if k == net_k {
+                            if k == new_links {
                                 break;
                             }
                             // Make friend ineligible for a new link
