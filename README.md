@@ -38,3 +38,20 @@ Feel free to develop a crate yourself.
 I will use the principles I learned to implement a virtual landscape in the form of a grid of patches. I am not committing to a specific date for this enhancement.
 
 Another future improvement is the parameter sweep, also known as BehaviorSpace in NetLogo.
+
+## Other ABM designs and links
+
+[Actix - Actor framework for Rust](https://github.com/actix/actix)
+
+Carmine Spanguolo, [Rust-AB -- An Agent Based Simulation engine in Rust](https://github.com/spagnuolocarmine/abm)
+
+Francis Tseng, [rust-sim - Sketches for rust agent-based modeling framework](https://github.com/frnsys/rust-sim)
+
+## References
+
+West, Catherine (2018), ["Using Rust for Game Development,"](https://kyren.github.io/2018/09/14/rustconf-talk.html), RustConf 2018 closing keynote.
+
+Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019) On Evaluating Rust as a Programming Language for the Future of Massive Agent-Based Simulations. In: Tan G., Lehmann A., Teo Y., Cai W. (eds) Methods and Applications for Modeling and Simulation of Complex Systems. AsiaSim 2019. Communications in Computer and Information Science, vol 1094. Springer, Singapore
+
+Antelmi, A., Cordasco, G., D’Auria, M., De Vinco, D., Negro, A., & Spagnuolo, C. (2019, October). On Evaluating Rust as a Programming Language for the Future of Massive Agent-Based Simulations. In Asian Simulation Conference (pp. 15-28). Springer, Singapore. https://doi.org/10.1007/978-981-15-1078-6_2
+
