@@ -9,7 +9,7 @@ https://gitlab.com/facorread/rust-agent-based-models
 
 ## Why?
 
-Agent-based models (ABM) are a computational tool of complexity science; it has a wide range of applications particularly in the framework of complex adaptive systems. ABMs are popular in computational social science, also known as generative social science or artificial societies. ABMs are also a typycal tool to study coupled human and natural systems.
+Agent-based models (ABM) are computational tools of complexity science and complex adaptive systems. ABMs are popular in computational social science, also known as generative social science, as they enable scientists test hypotheses about human behavior by building artificial societies. ABMs are also a typical tool to study coupled human and natural systems.
 
 Rust is useful to write safe, fast software for a wide range of applications such as operating systems and embedded systems. Rust removes complications such as interpreters and garbage collectors. Rust trades safety and speed for a data-driven coding discipline, where a tool called the borrow checker prevents us from using patterns that invalidate memory and hurt our research. Fighting with the borrow checker for a little while is a good way to learn good coding practices.
 
