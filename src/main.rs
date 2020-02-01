@@ -44,7 +44,7 @@ fn main() {
     let mut health = SlotMap::with_capacity_and_key(2 * n0);
     // Model state: Bidirectional links between agents
     let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
-    // This is the seed for a scale-free network: Two agents with a link
+    // Model initialization: Agents
     while health.len() < n0 {
         let _k: AgentKey = health.insert(Health::S);
     }
