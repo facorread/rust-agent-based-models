@@ -94,19 +94,21 @@ fn main() {
                 };
                 if new_links > 0 {
                     let agent_key = agent_key_vec[agent_idx];
-                    let mut weights_tmp = weights_vec.clone();
-                    weights_tmp[agent_idx] = 0;
-                    for &(key0, key1) in links.values() {
-                        if key0 == agent_key {
-                            weights_tmp[agent_key_vec.iter().position(|&k| k == key1).unwrap()] =
-                                0;
+                    let dist_result = {
+                        let mut weights_tmp = weights_vec.clone();
+                        weights_tmp[agent_idx] = 0;
+                        for &(key0, key1) in links.values() {
+                            if key0 == agent_key {
+                                weights_tmp
+                                    [agent_key_vec.iter().position(|&k| k == key1).unwrap()] = 0;
+                            }
+                            if key1 == agent_key {
+                                weights_tmp
+                                    [agent_key_vec.iter().position(|&k| k == key0).unwrap()] = 0;
+                            }
                         }
-                        if key1 == agent_key {
-                            weights_tmp[agent_key_vec.iter().position(|&k| k == key0).unwrap()] =
-                                0;
-                        }
-                    }
-                    let dist_result = WeightedIndex::new(weights_tmp);
+                        WeightedIndex::new(weights_tmp)
+                    };
                     if dist_result.is_ok() {
                         let mut dist = dist_result.unwrap();
                         let mut k = 0;
