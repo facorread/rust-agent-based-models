@@ -70,19 +70,19 @@ fn main() {
             let (key1, _value) = h_it.next().unwrap();
             let _link_id: LinkKey = links.insert((key0, key1));
         }
+        // Initialization of this time step: Network
         {
-            // Initialization of this time step: Network
             let agent_key_vec: Vec<AgentKey> = health.keys().collect();
             let mut weights_vec: Vec<i32> = {
                 let mut weights_map = SecondaryMap::with_capacity(health.capacity());
                 agent_key_vec.iter().for_each(|&k| {
                     let _ = weights_map.insert(k, 0);
                 });
-                for (key0, key1) in links.values() {
-                    weights_map[*key0] += 1;
-                    weights_map[*key1] += 1;
+                for &(key0, key1) in links.values() {
+                    weights_map[key0] += 1;
+                    weights_map[key1] += 1;
                 }
-                agent_key_vec.iter().map(|k| weights_map[*k]).collect()
+                agent_key_vec.iter().map(|&k| weights_map[k]).collect()
             };
             for agent_idx in 0..agent_key_vec.len() {
                 let new_links = if weights_vec[agent_idx] == 0 {
@@ -96,13 +96,13 @@ fn main() {
                     let agent_key = agent_key_vec[agent_idx];
                     let mut weights_tmp = weights_vec.clone();
                     weights_tmp[agent_idx] = 0;
-                    for (key0, key1) in links.values() {
-                        if *key0 == agent_key {
-                            weights_tmp[agent_key_vec.iter().position(|&k| k == *key1).unwrap()] =
+                    for &(key0, key1) in links.values() {
+                        if key0 == agent_key {
+                            weights_tmp[agent_key_vec.iter().position(|&k| k == key1).unwrap()] =
                                 0;
                         }
-                        if *key1 == agent_key {
-                            weights_tmp[agent_key_vec.iter().position(|&k| k == *key0).unwrap()] =
+                        if key1 == agent_key {
+                            weights_tmp[agent_key_vec.iter().position(|&k| k == key0).unwrap()] =
                                 0;
                         }
                     }
