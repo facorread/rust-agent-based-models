@@ -73,15 +73,17 @@ fn main() {
         // Initialization of this time step: Network
         {
             let agent_key_vec: Vec<AgentKey> = health.keys().collect();
+            let mut index_map = SecondaryMap::with_capacity(health.capacity());
             let mut weights_vec: Vec<i32> = {
                 let mut weights_map = SecondaryMap::with_capacity(health.capacity());
-                agent_key_vec.iter().for_each(|&k| {
+                agent_key_vec.iter().enumerate().for_each(|(idx, &k)| {
                     let _ = weights_map.insert(k, 0);
+                    let _ = index_map.insert(k, idx);
                 });
-                for &(key0, key1) in links.values() {
+                links.values().for_each(|&(key0, key1)| {
                     weights_map[key0] += 1;
                     weights_map[key1] += 1;
-                }
+                });
                 agent_key_vec.iter().map(|&k| weights_map[k]).collect()
             };
             for agent_idx in 0..agent_key_vec.len() {
@@ -96,17 +98,17 @@ fn main() {
                     let agent_key = agent_key_vec[agent_idx];
                     let dist_result = {
                         let mut weights_tmp = weights_vec.clone();
+                        // This agent cannot make a link to itself; set its weight to 0.
                         weights_tmp[agent_idx] = 0;
-                        for &(key0, key1) in links.values() {
+                        // Friends are ineligible for a new link; set friends' weights to 0.
+                        links.values().for_each(|&(key0, key1)| {
                             if key0 == agent_key {
-                                weights_tmp
-                                    [agent_key_vec.iter().position(|&k| k == key1).unwrap()] = 0;
+                                weights_tmp[index_map[key1]] = 0;
                             }
                             if key1 == agent_key {
-                                weights_tmp
-                                    [agent_key_vec.iter().position(|&k| k == key0).unwrap()] = 0;
+                                weights_tmp[index_map[key0]] = 0;
                             }
-                        }
+                        });
                         WeightedIndex::new(weights_tmp)
                     };
                     if dist_result.is_ok() {
@@ -121,7 +123,7 @@ fn main() {
                             if k == new_links {
                                 break;
                             }
-                            // Make friend ineligible for a new link
+                            // Make friend ineligible for a new link; set its weight to 0.
                             if dist.update_weights(&[(friend_idx, &0)]).is_err() {
                                 break;
                             }
@@ -133,12 +135,12 @@ fn main() {
             {
                 let mut s = 0;
                 let mut i = 0;
-                for h in health.values() {
+                health.values().for_each(|h| {
                     match h {
                         Health::S => s += 1,
                         Health::I => i += 1,
                     }
-                }
+                });
                 let d_max = weights_vec.iter().copied().max().unwrap_or(0);
                 let d_s = match agent_key_vec
                     .iter()
@@ -181,7 +183,7 @@ fn main() {
         {
             // Model state: Agent health the next time step
             let mut next_health = SecondaryMap::with_capacity(health.capacity());
-            for (key0, key1) in links.values().copied() {
+            links.values().for_each(|&(key0, key1)| {
                 let h0 = health[key0];
                 let h1 = health[key1];
                 if h0 == Health::S && h1 == Health::I && infection_distro.sample(&mut rng) {
@@ -190,7 +192,7 @@ fn main() {
                 if h1 == Health::S && h0 == Health::I && infection_distro.sample(&mut rng) {
                     next_health.insert(key1, Health::I);
                 }
-            }
+            });
             if time_step == 1 {
                 health.iter().for_each(|(k, &h)| {
                     if h == Health::S && initial_infection_distro.sample(&mut rng) {
