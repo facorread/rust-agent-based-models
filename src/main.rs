@@ -55,7 +55,7 @@ fn main() {
     let recovery_distro = Bernoulli::new(0.8).unwrap();
     let survival_distro = Bernoulli::new(0.8).unwrap();
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
-    writeln!(&mut ts_file, "Time step, Number of agents n, Susceptibles s, Infected i, Maximum network degree d_max, Average degree of susceptibles d_s, Average degree of infectious d_i").expect("Error writing time series output file");
+    writeln!(&mut ts_file, "Time step, Number of agents n, Susceptibles s, Infected i, Maximum network degree of susceptibles d_s, Maximum network degree of infectious d_i").expect("Error writing time series output file");
     let mut rng = rand::thread_rng();
     let mut time_step = 0;
     loop {
@@ -140,7 +140,6 @@ fn main() {
                         Health::I => i += 1,
                     }
                 });
-                let d_max = weights_vec.iter().copied().max().unwrap_or(0);
                 let d_s = match keys_vec
                     .iter()
                     .zip(weights_vec.iter())
@@ -161,12 +160,11 @@ fn main() {
                 };
                 writeln!(
                     &mut ts_file,
-                    "{},{},{},{},{},{},{}",
+                    "{},{},{},{},{},{}",
                     time_step,
                     health.len(),
                     s,
                     i,
-                    d_max,
                     d_s,
                     d_i
                 )
