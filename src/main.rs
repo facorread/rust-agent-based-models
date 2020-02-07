@@ -72,21 +72,21 @@ fn main() {
         }
         // Initialization of this time step: Network
         {
-            let agent_key_vec: Vec<AgentKey> = health.keys().collect();
-            let mut index_map = SecondaryMap::with_capacity(health.capacity());
+            let keys_vec: Vec<AgentKey> = health.keys().collect();
+            let mut idx_map = SecondaryMap::with_capacity(health.capacity());
             let mut weights_vec: Vec<i32> = {
                 let mut weights_map = SecondaryMap::with_capacity(health.capacity());
-                agent_key_vec.iter().enumerate().for_each(|(idx, &k)| {
-                    let _ = weights_map.insert(k, 0);
-                    let _ = index_map.insert(k, idx);
+                keys_vec.iter().enumerate().for_each(|(idx, &k)| {
+                    weights_map.insert(k, 0);
+                    idx_map.insert(k, idx);
                 });
                 links.values().for_each(|&(key0, key1)| {
                     weights_map[key0] += 1;
                     weights_map[key1] += 1;
                 });
-                agent_key_vec.iter().map(|&k| weights_map[k]).collect()
+                keys_vec.iter().map(|&k| weights_map[k]).collect()
             };
-            for agent_idx in 0..agent_key_vec.len() {
+            for agent_idx in 0..keys_vec.len() {
                 let new_links = if weights_vec[agent_idx] == 0 {
                     net_k
                 } else if link_distro.sample(&mut rng) {
@@ -95,7 +95,7 @@ fn main() {
                     0
                 };
                 if new_links > 0 {
-                    let agent_key = agent_key_vec[agent_idx];
+                    let agent_key = keys_vec[agent_idx];
                     let dist_result = {
                         let mut weights_tmp = weights_vec.clone();
                         // This agent cannot make a link to itself; set its weight to 0.
@@ -103,10 +103,10 @@ fn main() {
                         // Friends are ineligible for a new link; set friends' weights to 0.
                         links.values().for_each(|&(key0, key1)| {
                             if key0 == agent_key {
-                                weights_tmp[index_map[key1]] = 0;
+                                weights_tmp[idx_map[key1]] = 0;
                             }
                             if key1 == agent_key {
-                                weights_tmp[index_map[key0]] = 0;
+                                weights_tmp[idx_map[key0]] = 0;
                             }
                         });
                         WeightedIndex::new(weights_tmp)
@@ -116,7 +116,7 @@ fn main() {
                         let mut k = 0;
                         loop {
                             let friend_idx = dist.sample(&mut rng);
-                            links.insert((agent_key, agent_key_vec[friend_idx]));
+                            links.insert((agent_key, keys_vec[friend_idx]));
                             weights_vec[agent_idx] += 1;
                             weights_vec[friend_idx] += 1;
                             k += 1;
@@ -142,7 +142,7 @@ fn main() {
                     }
                 });
                 let d_max = weights_vec.iter().copied().max().unwrap_or(0);
-                let d_s = match agent_key_vec
+                let d_s = match keys_vec
                     .iter()
                     .zip(weights_vec.iter())
                     .filter(|(&k, _w)| health[k] == Health::S)
@@ -151,7 +151,7 @@ fn main() {
                     Some((_k, &w)) => w,
                     None => 0,
                 };
-                let d_i = match agent_key_vec
+                let d_i = match keys_vec
                     .iter()
                     .zip(weights_vec.iter())
                     .filter(|(&k, _w)| health[k] == Health::I)
