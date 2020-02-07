@@ -86,7 +86,7 @@ fn main() {
                 });
                 keys_vec.iter().map(|&k| weights_map[k]).collect()
             };
-            for agent_idx in 0..keys_vec.len() {
+            keys_vec.iter().enumerate().for_each(|(agent_idx, &agent_key)| {
                 let new_links = if weights_vec[agent_idx] == 0 {
                     net_k
                 } else if link_distro.sample(&mut rng) {
@@ -95,7 +95,6 @@ fn main() {
                     0
                 };
                 if new_links > 0 {
-                    let agent_key = keys_vec[agent_idx];
                     let dist_result = {
                         let mut weights_tmp = weights_vec.clone();
                         // This agent cannot make a link to itself; set its weight to 0.
@@ -130,7 +129,7 @@ fn main() {
                         }
                     }
                 }
-            }
+            });
             // Model measurements
             {
                 let mut s = 0;
