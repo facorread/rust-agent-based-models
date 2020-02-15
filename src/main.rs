@@ -86,59 +86,60 @@ fn main() {
                 });
                 keys_vec.iter().map(|&k| weights_map[k]).collect()
             };
-            keys_vec.iter().enumerate().for_each(|(agent_idx, &agent_key)| {
-                let new_links = if weights_vec[agent_idx] == 0 {
-                    net_k
-                } else if link_distro.sample(&mut rng) {
-                    1
-                } else {
-                    0
-                };
-                if new_links > 0 {
-                    let dist_result = {
-                        let mut weights_tmp = weights_vec.clone();
-                        // This agent cannot make a link to itself; set its weight to 0.
-                        weights_tmp[agent_idx] = 0;
-                        // Friends are ineligible for a new link; set friends' weights to 0.
-                        links.values().for_each(|&(key0, key1)| {
-                            if key0 == agent_key {
-                                weights_tmp[idx_map[key1]] = 0;
-                            }
-                            if key1 == agent_key {
-                                weights_tmp[idx_map[key0]] = 0;
-                            }
-                        });
-                        WeightedIndex::new(weights_tmp)
+            keys_vec
+                .iter()
+                .enumerate()
+                .for_each(|(agent_idx, &agent_key)| {
+                    let new_links = if weights_vec[agent_idx] == 0 {
+                        net_k
+                    } else if link_distro.sample(&mut rng) {
+                        1
+                    } else {
+                        0
                     };
-                    if dist_result.is_ok() {
-                        let mut dist = dist_result.unwrap();
-                        let mut k = 0;
-                        loop {
-                            let friend_idx = dist.sample(&mut rng);
-                            links.insert((agent_key, keys_vec[friend_idx]));
-                            weights_vec[agent_idx] += 1;
-                            weights_vec[friend_idx] += 1;
-                            k += 1;
-                            if k == new_links {
-                                break;
-                            }
-                            // Make friend ineligible for a new link; set its weight to 0.
-                            if dist.update_weights(&[(friend_idx, &0)]).is_err() {
-                                break;
+                    if new_links > 0 {
+                        let dist_result = {
+                            let mut weights_tmp = weights_vec.clone();
+                            // This agent cannot make a link to itself; set its weight to 0.
+                            weights_tmp[agent_idx] = 0;
+                            // Friends are ineligible for a new link; set friends' weights to 0.
+                            links.values().for_each(|&(key0, key1)| {
+                                if key0 == agent_key {
+                                    weights_tmp[idx_map[key1]] = 0;
+                                }
+                                if key1 == agent_key {
+                                    weights_tmp[idx_map[key0]] = 0;
+                                }
+                            });
+                            WeightedIndex::new(weights_tmp)
+                        };
+                        if dist_result.is_ok() {
+                            let mut dist = dist_result.unwrap();
+                            let mut k = 0;
+                            loop {
+                                let friend_idx = dist.sample(&mut rng);
+                                links.insert((agent_key, keys_vec[friend_idx]));
+                                weights_vec[agent_idx] += 1;
+                                weights_vec[friend_idx] += 1;
+                                k += 1;
+                                if k == new_links {
+                                    break;
+                                }
+                                // Make friend ineligible for a new link; set its weight to 0.
+                                if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                                    break;
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
             // Model measurements
             {
                 let mut s = 0;
                 let mut i = 0;
-                health.values().for_each(|h| {
-                    match h {
-                        Health::S => s += 1,
-                        Health::I => i += 1,
-                    }
+                health.values().for_each(|h| match h {
+                    Health::S => s += 1,
+                    Health::I => i += 1,
                 });
                 let d_s = match keys_vec
                     .iter()
