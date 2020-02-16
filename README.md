@@ -35,9 +35,7 @@ See my [wrapping_coords2d](https://crates.io/crates/wrapping_coords2d) crate to 
 
 ## What comes next?
 
-I will use the principles I learned to implement a virtual landscape in the form of a grid of patches. I am not committing to a specific date for this enhancement.
-
-Another future improvement is the parameter sweep, also known as BehaviorSpace in NetLogo.
+A future improvement is the parameter sweep, also known as BehaviorSpace in NetLogo. I am not committing to a specific date for this enhancement.
 
 ## Other ABM designs and links
 

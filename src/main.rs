@@ -17,10 +17,12 @@
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
 use rand::distributions::{weighted::WeightedIndex, Bernoulli, Distribution};
+use rand_distr::Normal;
 use slotmap::{SecondaryMap, SlotMap};
 use std::fs;
 // use std::fmt::Write as FmtWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
 use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
+use wrapping_coords2d::WrappingCoords2d;
 
 // Model properties
 #[derive(Clone, Copy, PartialEq)]
@@ -40,10 +42,14 @@ fn main() {
     let n0: usize = 1000;
     // Model parameter: Scale-free network parameter: new links per agent
     let net_k: usize = 7;
+    // Model parameter: Dimensions of the virtual landscape, in number of cells
+    let coord = WrappingCoords2d::new(100, 100).unwrap();
     // Model state: Agent health
     let mut health = SlotMap::with_capacity_and_key(2 * n0);
     // Model state: Bidirectional links between agents
     let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
+    // Model state: Health status of each cell in the landscape
+    let mut cell_health = vec![Health::S; coord.size()];
     // Model initialization: Agents
     while health.len() < n0 {
         let _k: AgentKey = health.insert(Health::S);
@@ -51,17 +57,19 @@ fn main() {
     let birth_distro = Bernoulli::new(0.01).unwrap();
     let infection_distro = Bernoulli::new(0.4).unwrap();
     let initial_infection_distro = Bernoulli::new(0.3).unwrap();
+    // Normal distribution to choose cells in the landscape
+    let radius_distro = Normal::new(50.0 as f32, 0.4 * coord.width() as f32).unwrap();
     let link_distro = Bernoulli::new(0.01).unwrap();
     let recovery_distro = Bernoulli::new(0.8).unwrap();
     let survival_distro = Bernoulli::new(0.8).unwrap();
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
-    writeln!(&mut ts_file, "Time step, Number of agents n, Susceptibles s, Infected i, Maximum network degree of susceptibles d_s, Maximum network degree of infectious d_i").expect("Error writing time series output file");
+    writeln!(&mut ts_file, "Time step, n Number of agents, s Susceptibles, i Infected, d_s Maximum network degree of susceptibles, d_i Maximum network degree of infectious, c_i Infected cells").expect("Error writing time series output file");
     let mut rng = rand::thread_rng();
     let mut time_step = 0;
     loop {
         // Simple, fast models do not need to print the time_step. Printing is slow.
         if time_step % 10 == 0 {
-            print!("\r                                                                         \rtime_step = {}", time_step);
+            eprint!("\r                                                                         \rtime_step = {}", time_step);
         }
         // Initialization of this time step: Network seed
         if links.is_empty() && health.len() > 1 {
@@ -159,15 +167,17 @@ fn main() {
                     Some((_k, &w)) => w,
                     None => 0,
                 };
+                let c_i = cell_health.iter().filter(|&&h| h == Health::I).count();
                 writeln!(
                     &mut ts_file,
-                    "{},{},{},{},{},{}",
+                    "{},{},{},{},{},{},{}",
                     time_step,
                     health.len(),
                     s,
                     i,
                     d_s,
-                    d_i
+                    d_i,
+                    c_i
                 )
                 .expect("Error writing time series output file");
             }
@@ -181,6 +191,8 @@ fn main() {
         {
             // Model state: Agent health the next time step
             let mut next_health = SecondaryMap::with_capacity(health.capacity());
+            // Model state: Cell health the next time step
+            let mut next_cell_health = cell_health.clone();
             links.values().for_each(|&(key0, key1)| {
                 let h0 = health[key0];
                 let h1 = health[key1];
@@ -199,8 +211,32 @@ fn main() {
                 });
             }
             health.iter().for_each(|(k, &h)| {
+                // Choose a random cell to visit
+                let x = radius_distro.sample(&mut rng) as i32;
+                let y = radius_distro.sample(&mut rng) as i32;
+                let idx = coord.index(x, y);
+                match h {
+                    Health::S => {
+                        if cell_health[idx] == Health::I && infection_distro.sample(&mut rng) {
+                            // Cell infects agent
+                            next_health.insert(k, Health::I);
+                        }
+                    }
+                    Health::I => {
+                        if cell_health[idx] == Health::S && infection_distro.sample(&mut rng) {
+                            // Agent infects cell
+                            next_cell_health[idx] = Health::I;
+                        }
+                        if recovery_distro.sample(&mut rng) {
+                            next_health.insert(k, Health::S);
+                        }
+                    }
+                };
+            });
+            // Dynamics: Infectious cells recover
+            cell_health.iter().enumerate().for_each(|(idx, &h)| {
                 if h == Health::I && recovery_distro.sample(&mut rng) {
-                    next_health.insert(k, Health::S);
+                    next_cell_health[idx] = Health::S;
                 }
             });
             // Dynamics: After spreading the infection, some infectious agents die
@@ -214,6 +250,13 @@ fn main() {
                     *h = next_h;
                 }
             });
+            // Dynamics: cells update in parallel
+            next_cell_health
+                .iter()
+                .zip(cell_health.iter_mut())
+                .for_each(|(next_h, h)| {
+                    *h = *next_h;
+                });
         }
         // Dynamics: Prune network
         links.retain(|_link_key, (key0, key1)| {
@@ -228,5 +271,5 @@ fn main() {
             health.insert(Health::S);
         }
     }
-    println!("\r                                                                         \rtime_step = {}\nThe dataset is ready.", time_step);
+    eprintln!("\r                                                                         \rtime_step = {}\nThe dataset is ready.", time_step);
 }
