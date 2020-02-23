@@ -31,7 +31,7 @@ Please send me a short email to let me know if you find any of the ideas in this
 
 Generally speaking, the code for an ABM is tightly integrated; see, for example, a typical NetLogo model. In this software, model variables such as ```health```, ```next_health```, and ```links``` interact so much with one another that it is not worth it to encapsulate them or restrict access. But this also means that separating the code into library and client is not feasible.
 
-See my [wrapping_coords2d](https://crates.io/crates/wrapping_coords2d) crate to develop the spatial components of your model, in the form of a 2D grid of cells where the x and y coordinates wrap around. For spatial components without wrapping, see [`ameda`](https://docs.rs/ameda/latest/ameda).
+See my [`wrapping_coords2d`](https://crates.io/crates/wrapping_coords2d) crate to develop the spatial components of your model, in the form of a 2D grid of cells where the x and y coordinates wrap around. For spatial components without wrapping, see [`ameda`](https://docs.rs/ameda/latest/ameda).
 
 ## What comes next?
 
