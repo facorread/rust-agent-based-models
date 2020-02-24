@@ -233,6 +233,17 @@ fn main() {
                     }
                 };
             });
+            // Dynamics: Disease spreads across cells
+            for i in 0..cell_health.len() {
+                if cell_health[i] == Health::S {
+                    for j in coord.neighbors8(i) {
+                        if cell_health[j] == Health::I && infection_distro.sample(&mut rng) {
+                            next_cell_health[i] = Health::I;
+                            break;
+                        }
+                    }
+                }
+            }
             // Dynamics: Infectious cells recover
             cell_health.iter().enumerate().for_each(|(idx, &h)| {
                 if h == Health::I && recovery_distro.sample(&mut rng) {
