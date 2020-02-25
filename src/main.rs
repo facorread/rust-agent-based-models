@@ -235,19 +235,19 @@ fn main() {
             });
             // Dynamics: Disease spreads across cells and infectious cells recover
             // Two indices, i and j, seem to produce clearer code than an index and an iterator cell_health.iter().enumerate().for_each(|(idx, &h)| {});
-            for i in 0..cell_health.len() {
-                match cell_health[i] {
-                    Health::S => for j in coord.neighbors8(i) {
-                        if cell_health[j] == Health::I && infection_distro.sample(&mut rng) {
-                            next_cell_health[i] = Health::I;
+            coord.for_each8(|this_cell_index, neighbors| {
+                match cell_health[this_cell_index] {
+                    Health::S => for neighbor_index in neighbors {
+                        if cell_health[*neighbor_index] == Health::I && infection_distro.sample(&mut rng) {
+                            next_cell_health[*neighbor_index] = Health::I;
                             break;
                         }
                     }
                     Health::I => if recovery_distro.sample(&mut rng) {
-                        next_cell_health[i] = Health::S;
+                        next_cell_health[this_cell_index] = Health::S;
                     }
                 }
-            }
+            });
             // Dynamics: After spreading the infection, some infectious agents die
             health.retain(|_agent_key, h| match h {
                 Health::S => true,
