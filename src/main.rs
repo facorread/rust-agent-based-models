@@ -183,10 +183,10 @@ fn main() {
             }
         }
         // Dynamics: Time step
-        time_step += 1;
         if time_step == 100 {
             break;
         }
+        time_step += 1;
         // Dynamics: infection spreads
         {
             // Model state: Agent health the next time step
