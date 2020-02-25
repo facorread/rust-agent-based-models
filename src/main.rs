@@ -242,7 +242,7 @@ fn main() {
                             if cell_health[*neighbor_index] == Health::I
                                 && infection_distro.sample(&mut rng)
                             {
-                                next_cell_health[*neighbor_index] = Health::I;
+                                next_cell_health[this_cell_index] = Health::I;
                                 break;
                             }
                         }
