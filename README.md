@@ -19,7 +19,7 @@ After you have used popular frameworks to prototype your ABM, consider using Rus
 
 ## What can I do with this software?
 
-Ideally you could make a fork of this software and modify it to build and publish your ABM on GitHub or GitLab. Or you can just make a copy and start an ABM in your own repository. Finally, you can take some of the ideas to inform your own design: ideas on how to generate agents and links, how to make them interact and update, how to remove them, and how does the software handle dangling links and states.
+Ideally you would fork this repository to build your own model; this would give you easy access to bug fixes and enhancements via `git pull` and `git merge`. As an alternative, you can just copy this code and start an ABM in your own repository. Finally, you can implement the ideas in this repository as part of your own design.
 
 If you want to reuse code, for example, to generate links at several stages within a time step, you will need to store the state variables in a ```world``` struct; see Catherine's presentation.
 
@@ -29,13 +29,17 @@ Please send me a short email to let me know if you find any of the ideas in this
 
 ## Why not make a crate?
 
-Generally speaking, the code for an ABM is tightly integrated; see, for example, a typical NetLogo model. In this software, model variables such as ```health```, ```next_health```, and ```links``` interact so much with one another that it is not worth it to encapsulate them or restrict access. But this also means that separating the code into library and client is not feasible.
+Generally speaking, the code for an ABM is tightly integrated; see, for example, a typical NetLogo model: turtles, patches, and links have no privacy or encapsulation. In this repository, model variables such as ```health```, ```next_health```, ```cell_health```, and ```links``` interact so much with one another that it is not worth it to encapsulate them or restrict access. But this also means that separating the code into library and client is not feasible.
 
-See my [`wrapping_coords2d`](https://crates.io/crates/wrapping_coords2d) crate to develop the spatial components of your model, in the form of a 2D grid of cells where the x and y coordinates wrap around. For spatial components without wrapping, see [`ameda`](https://docs.rs/ameda/latest/ameda).
+Some individual components of the ABM can exist in independent crates. One of them is Orson Peters' [Slotmap](https://github.com/orlp/slotmap), an efficient memory manager that reuses space left behind by dying agents. The other is my [`wrapping_coords2d`](https://crates.io/crates/wrapping_coords2d) crate, a utility to manage the landscape by mapping a 2D grid of cells into a vector. Both x and y coordinates wrap around the limits of the grid. As an alternative, you can use [`ameda`](https://docs.rs/ameda/latest/ameda) to manage the landscape without wrapping.
 
 ## What comes next?
 
-A future improvement is the parameter sweep, also known as BehaviorSpace in NetLogo. I am not committing to a specific date for this enhancement.
+Future improvements include plotting the landscape, histograms, and timelines with the [plotters](https://crates.io/crates/plotters) crate. I will also do parameter sweeps, also known as BehaviorSpace in NetLogo. I am not committing to specific dates for these enhancements.
+
+## Does this repository use `unsafe` code?
+
+No.
 
 ## Other ABM designs and links
 
@@ -48,6 +52,10 @@ Francis Tseng, [rust-sim - Sketches for rust agent-based modeling framework](htt
 Orson Peters, [orlp/slotmap - Data structure for Rust](https://github.com/orlp/slotmap)
 
 Diggory Hardy, [rust-random/rand - A Rust library for random number generation](https://github.com/rust-random/rand)
+
+AJ (Jay, Zencodes, ajjaic), [`ameda - Manipulate 2D grid indices`](https://docs.rs/ameda/latest/ameda)
+
+Wilensky, U. 1999. NetLogo. http://ccl.northwestern.edu/netlogo/. Center for Connected Learning and Computer-Based Modeling, Northwestern University. Evanston, IL.
 
 ## References
 

@@ -50,6 +50,8 @@ fn main() {
     let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
     // Model state: Health status of each cell in the landscape
     let mut cell_health = vec![Health::S; coord.size()];
+    // Model state: Cell health storage for the next time step. This implements parallel updating of cells.
+    let mut next_cell_health = cell_health.clone();
     // Model initialization: Agents
     while health.len() < n0 {
         let _k: AgentKey = health.insert(Health::S);
@@ -191,8 +193,6 @@ fn main() {
         {
             // Model state: Agent health the next time step
             let mut next_health = SecondaryMap::with_capacity(health.capacity());
-            // Model state: Cell health the next time step
-            let mut next_cell_health = cell_health.clone();
             links.values().for_each(|&(key0, key1)| {
                 let h0 = health[key0];
                 let h1 = health[key1];
@@ -266,12 +266,7 @@ fn main() {
                 }
             });
             // Dynamics: cells update in parallel
-            next_cell_health
-                .iter()
-                .zip(cell_health.iter_mut())
-                .for_each(|(next_h, h)| {
-                    *h = *next_h;
-                });
+            cell_health = next_cell_health.clone();
         }
         // Dynamics: Prune network
         links.retain(|_link_key, (key0, key1)| {
