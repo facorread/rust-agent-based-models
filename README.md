@@ -31,7 +31,7 @@ Please send me a short email to let me know if you find any of the ideas in this
 
 Generally speaking, the code for an ABM is tightly integrated; see, for example, a typical NetLogo model: turtles, patches, and links have no privacy or encapsulation. In this repository, model variables such as ```health```, ```next_health```, ```cell_health```, and ```links``` interact so much with one another that it is not worth it to encapsulate them or restrict access. But this also means that separating the code into library and client is not feasible.
 
-Some individual components of the ABM can exist in independent crates. One of them is Orson Peters' [Slotmap](https://github.com/orlp/slotmap), an efficient memory manager that reuses space left behind by dying agents. The other is my [`wrapping_coords2d`](https://crates.io/crates/wrapping_coords2d) crate, a utility to manage the landscape by mapping a 2D grid of cells into a vector. Both x and y coordinates wrap around the limits of the grid. As an alternative, you can use [`ameda`](https://docs.rs/ameda/latest/ameda) to manage the landscape without wrapping.
+Some individual components of the ABM can exist in independent crates. One of them is Orson Peters' [`slotmap`](https://github.com/orlp/slotmap), an efficient memory manager that reuses space left behind by dying agents. The other is my [`wrapping_coords2d`](https://crates.io/crates/wrapping_coords2d) crate, a utility to manage the landscape by mapping a 2D grid of cells into a vector. Both x and y coordinates wrap around the limits of the grid. As an alternative, you can use [`ameda`](https://docs.rs/ameda/latest/ameda) to manage the landscape without wrapping.
 
 ## What comes next?
 
