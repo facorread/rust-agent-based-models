@@ -35,7 +35,7 @@ Some individual components of the ABM can exist in independent crates. One of th
 
 ## What comes next?
 
-Future improvements include plotting the landscape, histograms, and timelines with the [plotters](https://crates.io/crates/plotters) crate. I will also do parameter sweeps, also known as BehaviorSpace in NetLogo. I am not committing to specific dates for these enhancements.
+Future improvements include plotting the landscape, histograms, and timelines with the [`plotters`](https://crates.io/crates/plotters) crate. In another improvement, I will do parameter sweeps, also known as BehaviorSpace in NetLogo. I am not committing to specific dates for these enhancements.
 
 ## Does this repository use `unsafe` code?
 
@@ -47,15 +47,15 @@ No.
 
 Carmine Spanguolo, [Rust-AB -- An Agent Based Simulation engine in Rust](https://github.com/spagnuolocarmine/abm)
 
-Francis Tseng, [rust-sim - Sketches for rust agent-based modeling framework](https://github.com/frnsys/rust-sim)
+Francis Tseng, [`rust-sim`- Sketches for rust agent-based modeling framework](https://github.com/frnsys/rust-sim)
 
-Orson Peters, [orlp/slotmap - Data structure for Rust](https://github.com/orlp/slotmap)
+Orson Peters, [`slotmap` - Data structure for Rust](https://github.com/orlp/slotmap)
 
-Diggory Hardy, [rust-random/rand - A Rust library for random number generation](https://github.com/rust-random/rand)
+Diggory Hardy, [`rand` - A Rust library for random number generation](https://github.com/rust-random/rand)
 
-AJ (Jay, Zencodes, ajjaic), [`ameda - Manipulate 2D grid indices`](https://docs.rs/ameda/latest/ameda)
+AJ (Jay, Zencodes, ajjaic), [`ameda` - Manipulate 2D grid indices](https://docs.rs/ameda/latest/ameda)
 
-Wilensky, U. 1999. NetLogo. http://ccl.northwestern.edu/netlogo/. Center for Connected Learning and Computer-Based Modeling, Northwestern University. Evanston, IL.
+Wilensky, U. 1999. [NetLogo](http://ccl.northwestern.edu/netlogo/). Center for Connected Learning and Computer-Based Modeling, Northwestern University. Evanston, IL.
 
 ## References
 
