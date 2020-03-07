@@ -37,13 +37,13 @@ slotmap::new_key_type! {
     struct LinkKey;
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Model parameter: Initial number of agents
     let n0: usize = 1000;
     // Model parameter: Scale-free network parameter: new links per agent
     let net_k: usize = 7;
     // Model parameter: Dimensions of the virtual landscape, in number of cells
-    let coord = WrappingCoords2d::new(100, 100).unwrap();
+    let coord = WrappingCoords2d::new(100, 100)?;
     // Model state: Agent health
     let mut health = SlotMap::with_capacity_and_key(2 * n0);
     // Model state: Bidirectional links between agents
@@ -56,14 +56,14 @@ fn main() {
     while health.len() < n0 {
         let _k: AgentKey = health.insert(Health::S);
     }
-    let birth_distro = Bernoulli::new(0.01).unwrap();
-    let infection_distro = Bernoulli::new(0.4).unwrap();
-    let initial_infection_distro = Bernoulli::new(0.3).unwrap();
+    let birth_distro = Bernoulli::new(0.01)?;
+    let infection_distro = Bernoulli::new(0.4)?;
+    let initial_infection_distro = Bernoulli::new(0.3)?;
     // Normal distribution to choose cells in the landscape
     let radius_distro = Normal::new(50.0 as f32, 0.4 * coord.width() as f32).unwrap();
-    let link_distro = Bernoulli::new(0.01).unwrap();
-    let recovery_distro = Bernoulli::new(0.8).unwrap();
-    let survival_distro = Bernoulli::new(0.8).unwrap();
+    let link_distro = Bernoulli::new(0.01)?;
+    let recovery_distro = Bernoulli::new(0.8)?;
+    let survival_distro = Bernoulli::new(0.8)?;
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
     writeln!(&mut ts_file, "Time step, n Number of agents, s Susceptibles, i Infected, d_s Maximum network degree of susceptibles, d_i Maximum network degree of infectious, c_i Infected cells").expect("Error writing time series output file");
     let mut rng = rand::thread_rng();
@@ -282,4 +282,5 @@ fn main() {
         }
     }
     eprintln!("\r                                                                         \rtime_step = {}\nThe dataset is ready.", time_step);
+    Ok(())
 }
