@@ -138,7 +138,7 @@ fn main() {
         let mut id = 0;
         for &infection_probability in infection_probabilities.iter() {
             id += 1;
-            let scenario = scenarios_iter.next().unwrap();
+            let scenario: &mut Scenario = scenarios_iter.next().unwrap();
             scenario.id = id;
             scenario.infection_probability = infection_probability;
         }
