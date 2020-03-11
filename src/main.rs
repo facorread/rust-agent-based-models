@@ -82,7 +82,7 @@ fn main() {
     // Model parameter: probability of infection
     let infection_probabilities = [0.2f64, 0.4, 0.6];
     // Normal distribution to choose cells in the landscape
-    let radius_distro = Normal::new(50.0 as f32, 0.4 * coord.width() as f32).unwrap();
+    let visit_distro = Normal::new(50.0f32, 10f32).unwrap();
     let link_distro = Bernoulli::new(0.01).unwrap();
     let recovery_distro = Bernoulli::new(0.8).unwrap();
     let survival_distro = Bernoulli::new(0.8).unwrap();
@@ -261,8 +261,8 @@ fn main() {
                 }
                 health.iter().for_each(|(k, &h)| {
                     // Choose a random cell to visit
-                    let x = radius_distro.sample(&mut rng) as i32;
-                    let y = radius_distro.sample(&mut rng) as i32;
+                    let x = visit_distro.sample(&mut rng) as i32;
+                    let y = visit_distro.sample(&mut rng) as i32;
                     let idx = coord.index(x, y);
                     match h {
                         Health::S => {
