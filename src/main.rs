@@ -238,7 +238,7 @@ fn main() {
                     });
                 // Model measurements
                 {
-                    let mut time_step_results = time_series_iter.next().unwrap();
+                    let time_step_results: &mut TimeStepResults = time_series_iter.next().unwrap();
                     time_step_results.time_step = time_step;
                     time_step_results.n = health.len() as u32;
                     if scenario.agent_time_series_height < time_step_results.n {
@@ -389,30 +389,13 @@ fn main() {
         }
     });
     eprint!("\r                                                                         \rSimulation complete. Saving to disk... ");
-    let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
-    writeln!(&mut ts_file, "Infection Probability,Time step,n Number of agents,s Susceptibles,i Infected,d_s Maximum network degree of susceptibles,d_i Maximum network degree of infectious,c_i Infected cells").expect("Error writing time series output file");
-    scenarios.iter().for_each(|scenario| {
-        for (time_step, time_step_results) in scenario.time_series.iter().enumerate() {
-            writeln!(
-                &mut ts_file,
-                "{},{},{},{},{},{},{},{}",
-                scenario.infection_probability,
-                time_step,
-                time_step_results.n,
-                time_step_results.s,
-                time_step_results.i,
-                time_step_results.d_s,
-                time_step_results.d_i,
-                time_step_results.c_i
-            )
-            .expect("Error writing time series output file");
-        }
-    });
     let mut agent_time_series_height = 0;
     let mut cell_time_series_height = 0;
     let mut histogram_degrees_set = BTreeSet::new();
     let mut histogram_max_degree = 0;
     let mut histogram_height = 0;
+    let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
+    writeln!(&mut ts_file, "Infection Probability,Time step,n Number of agents,s Susceptibles,i Infected,d_s Maximum network degree of susceptibles,d_i Maximum network degree of infectious,c_i Infected cells").expect("Error writing time series output file");
     scenarios.iter().for_each(|scenario| {
         for degree in scenario.histogram_degrees_set.iter() {
             histogram_degrees_set.insert(degree);
@@ -429,7 +412,22 @@ fn main() {
         if cell_time_series_height < scenario.cell_time_series_height {
             cell_time_series_height = scenario.cell_time_series_height;
         }
-    });
+        scenario.time_series.iter().enumerate().for_each(|(time_step, time_step_results)| {
+        writeln!(
+            &mut ts_file,
+            "{},{},{},{},{},{},{},{}",
+            scenario.infection_probability,
+            time_step,
+            time_step_results.n,
+            time_step_results.s,
+            time_step_results.i,
+            time_step_results.d_s,
+            time_step_results.d_i,
+            time_step_results.c_i
+        )
+        .expect("Error writing time series output file");
+        }
+    )});
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
     let figure_step = next10(time_series_len as u32);
     let figure_offset = next10(scenarios.len() as u32 * figure_step);
