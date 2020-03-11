@@ -476,9 +476,9 @@ fn main() {
                         let (left_area, right_area) = drawing_area.split_horizontally(1920 - 1080);
                         let left_panels = left_area.split_evenly((4, 1));
                         left_panels[0].draw_text(&format!("infection_probability = {}", scenario.infection_probability), &text_color0(text_size0), (50, 10)).unwrap();
-                        left_panels[0].draw_text(&format!("time: {}", time_step_results.time_step), &text_color0(text_size0), (50, 50)).unwrap();
-                        left_panels[0].draw_text(&format!("d_s Max degree of susceptibles: {}", time_step_results.d_s), &text_color0(text_size0), (50, 90)).unwrap();
-                        left_panels[0].draw_text(&format!("d_i Max degree of infectious agents: {}", time_step_results.d_i), &text_color0(text_size0), (50, 130)).unwrap();
+                        left_panels[0].draw_text(&format!("d_s Max degree of susceptibles: {}", time_step_results.d_s), &text_color0(text_size0), (50, 100)).unwrap();
+                        left_panels[0].draw_text(&format!("d_i Max degree of infectious agents: {}", time_step_results.d_i), &text_color0(text_size0), (50, 140)).unwrap();
+                        left_panels[0].draw_text(&format!("time: {}", time_step_results.time_step), &text_color0(text_size0), (500, 10)).unwrap();
                         {
                             let x_range = if compress_histogram {
                                 0..x_degree.len() as i32
