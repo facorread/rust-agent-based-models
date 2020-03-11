@@ -580,7 +580,7 @@ fn main() {
                                 .map(|time_step_results| (time_step_results.time_step, time_step_results.i)),
                                 color_i.stroke_width(thick_stroke)
                             ))
-                            .unwrap().label("i Infected agents").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color2));
+                            .unwrap().label("i Infected agents").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color_i.stroke_width(thick_stroke)));
                             chart.configure_series_labels()
                                 .label_font(text_color0(text_size1))
                                 .border_style(color0)
