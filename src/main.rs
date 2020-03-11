@@ -120,19 +120,15 @@ fn main() {
     let link_distro = Bernoulli::new(0.01).unwrap();
     let recovery_distro = Bernoulli::new(0.8).unwrap();
     let survival_distro = Bernoulli::new(0.8).unwrap();
-    // Model parameter: Whether to create figures
-    let create_figures = true;
     // Model parameter: Last time step of the simulation in each scenario
     let last_time_step = 100;
     let time_series_len = last_time_step + 1;
     let mut scenarios = vec![
         {
             let mut scenario = Scenario::default();
-            if create_figures {
-                scenario
-                    .time_series
-                    .resize_with(time_series_len, Default::default);
-            }
+            scenario
+                .time_series
+                .resize_with(time_series_len, Default::default);
             scenario
         };
         infection_probabilities.len()
@@ -270,22 +266,20 @@ fn main() {
                         Some((_k, &w)) => w,
                         None => 0,
                     };
-                    if create_figures {
-                        for weight in weights_vec {
-                            *time_step_results
-                                .degree_histogram
-                                .entry(weight)
-                                .or_insert(0) += 1;
+                    for weight in weights_vec {
+                        *time_step_results
+                            .degree_histogram
+                            .entry(weight)
+                            .or_insert(0) += 1;
+                    }
+                    for (&weight, &frequency) in &time_step_results.degree_histogram {
+                        if compress_histogram {
+                            scenario.histogram_degrees_set.insert(weight);
+                        } else if scenario.histogram_max_degree < weight {
+                            scenario.histogram_max_degree = weight;
                         }
-                        for (&weight, &frequency) in &time_step_results.degree_histogram {
-                            if compress_histogram {
-                                scenario.histogram_degrees_set.insert(weight);
-                            } else if scenario.histogram_max_degree < weight {
-                                scenario.histogram_max_degree = weight;
-                            }
-                            if scenario.histogram_height < frequency {
-                                scenario.histogram_height = frequency;
-                            }
+                        if scenario.histogram_height < frequency {
+                            scenario.histogram_height = frequency;
                         }
                     }
                     time_step_results.c_i =
@@ -414,46 +408,45 @@ fn main() {
             .expect("Error writing time series output file");
         }
     });
-    if create_figures {
-        let mut agent_time_series_height = 0;
-        let mut cell_time_series_height = 0;
-        let mut histogram_degrees_set = BTreeSet::new();
-        let mut histogram_max_degree = 0;
-        let mut histogram_height = 0;
-        scenarios.iter().for_each(|scenario| {
-            for degree in scenario.histogram_degrees_set.iter() {
-                histogram_degrees_set.insert(degree);
-            }
-            if histogram_max_degree < scenario.histogram_max_degree {
-                histogram_max_degree = scenario.histogram_max_degree;
-            }
-            if histogram_height < scenario.histogram_height {
-                histogram_height = scenario.histogram_height;
-            }
-            if agent_time_series_height < scenario.agent_time_series_height {
-                agent_time_series_height = scenario.agent_time_series_height;
-            }
-            if cell_time_series_height < scenario.cell_time_series_height {
-                cell_time_series_height = scenario.cell_time_series_height;
-            }
-        });
-        let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
-        let figure_step = next10(time_series_len as u32);
-        let figure_offset = next10(scenarios.len() as u32 * figure_step);
-        let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
-        let _no_style = ShapeStyle {
-            color: no_color.clone(),
-            filled: false,
-            stroke_width: 0,
-        };
-        let margin = 5;
-        let thick_stroke = 4;
-        let text_size0 = 30;
-        let text_size1 = 17;
-        let x_label_area_size = 40;
-        let x_label_offset = 1;
-        let y_label_area_size = 60;
-        scenarios.iter().for_each(|scenario| {
+    let mut agent_time_series_height = 0;
+    let mut cell_time_series_height = 0;
+    let mut histogram_degrees_set = BTreeSet::new();
+    let mut histogram_max_degree = 0;
+    let mut histogram_height = 0;
+    scenarios.iter().for_each(|scenario| {
+        for degree in scenario.histogram_degrees_set.iter() {
+            histogram_degrees_set.insert(degree);
+        }
+        if histogram_max_degree < scenario.histogram_max_degree {
+            histogram_max_degree = scenario.histogram_max_degree;
+        }
+        if histogram_height < scenario.histogram_height {
+            histogram_height = scenario.histogram_height;
+        }
+        if agent_time_series_height < scenario.agent_time_series_height {
+            agent_time_series_height = scenario.agent_time_series_height;
+        }
+        if cell_time_series_height < scenario.cell_time_series_height {
+            cell_time_series_height = scenario.cell_time_series_height;
+        }
+    });
+    let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
+    let figure_step = next10(time_series_len as u32);
+    let figure_offset = next10(scenarios.len() as u32 * figure_step);
+    let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
+    let _no_style = ShapeStyle {
+        color: no_color.clone(),
+        filled: false,
+        stroke_width: 0,
+    };
+    let margin = 5;
+    let thick_stroke = 4;
+    let text_size0 = 30;
+    let text_size1 = 17;
+    let x_label_area_size = 40;
+    let x_label_offset = 1;
+    let y_label_area_size = 60;
+    scenarios.iter().for_each(|scenario| {
             eprint!("\r                                                                         \rSimulation complete. Creating figures for scenario {}/{}... ", scenario.id, scenarios.len());
             let figure_scenario_counter = figure_offset + (scenario.id * figure_step);
             scenario
@@ -642,7 +635,6 @@ fn main() {
                     }
                 });
         });
-    }
     eprintln!("\r                                                                         \nSimulation is complete.");
 }
 
