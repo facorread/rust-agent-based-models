@@ -21,9 +21,11 @@ After you have used popular frameworks to prototype your ABM, consider using Rus
 
 Ideally you would fork this repository to build your own model; this would give you easy access to bug fixes and enhancements via `git pull` and `git merge`. As an alternative, you can just copy this code and start an ABM in your own repository. Finally, you can implement the ideas in this repository as part of your own design.
 
-If you want to reuse code, for example, to generate links at several stages within a time step, you will need to store the state variables in a ```world``` struct; see Catherine's presentation.
+If you want to reuse code, for example, to generate links at several stages within a time step, you will need to store the state variables in a `world` struct; see Catherine's presentation.
 
 Use statistical software such as R, Julia, or SPSS to analyze and visualize the output files.
+
+This software uses the `plotters` crate to produce animations of the landscape and figures of the populations. You can use the `toggle_graphics` branch to remove or reintroduce the `plotters` code; this can speed up compilation and memory management of large and complex models, and at a later point you can reintroduce the code to visualize results for selected scenarios.
 
 Please send me a short email to let me know if you find any of the ideas in this software useful for your own research or if you believe a different approach is necessary.
 
@@ -41,19 +43,27 @@ Future improvements include plotting the landscape, histograms, and timelines wi
 
 No.
 
+## The scenarios and time_series data structure does not seem to conform to the ECS design.
+
+That is okay. The object-oriented scenarios are useful for parallel computation using the `rayon` crate. The landscape and agents take more computer time than the scenarios data structure.
+
 ## Other ABM designs and links
 
-[Actix - Actor framework for Rust](https://github.com/actix/actix)
+AJ (Jay, Zencodes, ajjaic), [`ameda` - Manipulate 2D grid indices](https://docs.rs/ameda/latest/ameda)
 
 Carmine Spanguolo, [Rust-AB -- An Agent Based Simulation engine in Rust](https://github.com/spagnuolocarmine/abm)
 
-Francis Tseng, [`rust-sim`- Sketches for rust agent-based modeling framework](https://github.com/frnsys/rust-sim)
-
-Orson Peters, [`slotmap` - Data structure for Rust](https://github.com/orlp/slotmap)
-
 Diggory Hardy, [`rand` - A Rust library for random number generation](https://github.com/rust-random/rand)
 
-AJ (Jay, Zencodes, ajjaic), [`ameda` - Manipulate 2D grid indices](https://docs.rs/ameda/latest/ameda)
+Francis Tseng, [`rust-sim`- Sketches for rust agent-based modeling framework](https://github.com/frnsys/rust-sim)
+
+Hao Hou, [`plotters` - A Rust drawing library](https://plotters-rs.github.io)
+
+Josh Stone, Niko Matsakis, [`Rayon`: A data parallelism library for Rust](https://github.com/rayon-rs/rayon)
+
+Nikolay Kim, [`actix` - Actor framework for Rust](https://github.com/actix/actix)
+
+Orson Peters, [`slotmap` - Data structure for Rust](https://github.com/orlp/slotmap)
 
 Wilensky, U. 1999. [NetLogo](http://ccl.northwestern.edu/netlogo/). Center for Connected Learning and Computer-Based Modeling, Northwestern University. Evanston, IL.
 
