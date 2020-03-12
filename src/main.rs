@@ -55,8 +55,6 @@ struct TimeStepResults {
     d_i: i32,
     /// Infected cells
     c_i: u32,
-    /// Health status
-    cell_health: Vec<Health>,
 }
 
 /// Simulation scenario, including parameters and results
@@ -230,7 +228,6 @@ fn main() {
                     };
                     time_step_results.c_i =
                         cell_health.iter().filter(|&&h| h == Health::I).count() as u32;
-                    time_step_results.cell_health = cell_health.clone();
                 }
             }
             // Dynamics: Time step
