@@ -412,22 +412,26 @@ fn main() {
         if cell_time_series_height < scenario.cell_time_series_height {
             cell_time_series_height = scenario.cell_time_series_height;
         }
-        scenario.time_series.iter().enumerate().for_each(|(time_step, time_step_results)| {
-        writeln!(
-            &mut ts_file,
-            "{},{},{},{},{},{},{},{}",
-            scenario.infection_probability,
-            time_step,
-            time_step_results.n,
-            time_step_results.s,
-            time_step_results.i,
-            time_step_results.d_s,
-            time_step_results.d_i,
-            time_step_results.c_i
-        )
-        .expect("Error writing time series output file");
-        }
-    )});
+        scenario
+            .time_series
+            .iter()
+            .enumerate()
+            .for_each(|(time_step, time_step_results)| {
+                writeln!(
+                    &mut ts_file,
+                    "{},{},{},{},{},{},{},{}",
+                    scenario.infection_probability,
+                    time_step,
+                    time_step_results.n,
+                    time_step_results.s,
+                    time_step_results.i,
+                    time_step_results.d_s,
+                    time_step_results.d_i,
+                    time_step_results.c_i
+                )
+                .expect("Error writing time series output file");
+            })
+    });
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
     let figure_step = next10(time_series_len as u32);
     let figure_offset = next10(scenarios.len() as u32 * figure_step);
