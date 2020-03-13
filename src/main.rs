@@ -332,20 +332,24 @@ fn main() {
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
     writeln!(&mut ts_file, "Infection Probability,Time step,n Number of agents,s Susceptibles,i Infected,d_s Maximum network degree of susceptibles,d_i Maximum network degree of infectious,c_i Infected cells").expect("Error writing time series output file");
     scenarios.iter().for_each(|scenario| {
-        scenario.time_series.iter().enumerate().for_each(|(time_step, time_step_results)| {
-        writeln!(
-            &mut ts_file,
-            "{},{},{},{},{},{},{},{}",
-            scenario.infection_probability,
-            time_step,
-            time_step_results.n,
-            time_step_results.s,
-            time_step_results.i,
-            time_step_results.d_s,
-            time_step_results.d_i,
-            time_step_results.c_i
-        )
-        .expect("Error writing time series output file");
+        scenario
+            .time_series
+            .iter()
+            .enumerate()
+            .for_each(|(time_step, time_step_results)| {
+                writeln!(
+                    &mut ts_file,
+                    "{},{},{},{},{},{},{},{}",
+                    scenario.infection_probability,
+                    time_step,
+                    time_step_results.n,
+                    time_step_results.s,
+                    time_step_results.i,
+                    time_step_results.d_s,
+                    time_step_results.d_i,
+                    time_step_results.c_i
+                )
+                .expect("Error writing time series output file");
         }
     )});
     eprintln!("\r                                                                         \nSimulation is complete.");
