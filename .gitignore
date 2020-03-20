@@ -6,3 +6,4 @@
 Cargo.lock
 *.csv
 *.tmp.rs
+*.wbk
