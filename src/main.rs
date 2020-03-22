@@ -396,11 +396,14 @@ fn main() {
     let mut ts_file = fs::File::create("ts.csv").expect("Unable to create time series output file");
     writeln!(&mut ts_file, "Infection Probability,Time step,n Number of agents,s Susceptibles,i Infected,d_s Maximum network degree of susceptibles,d_i Maximum network degree of infectious,c_i Infected cells").expect("Error writing time series output file");
     scenarios.iter().for_each(|scenario| {
-        for degree in scenario.histogram_degrees_set.iter() {
-            histogram_degrees_set.insert(degree);
-        }
-        if histogram_max_degree < scenario.histogram_max_degree {
-            histogram_max_degree = scenario.histogram_max_degree;
+        if compress_histogram {
+            for degree in scenario.histogram_degrees_set.iter() {
+                histogram_degrees_set.insert(degree);
+            }
+        } else {
+            if histogram_max_degree < scenario.histogram_max_degree {
+                histogram_max_degree = scenario.histogram_max_degree;
+            }
         }
         if histogram_height < scenario.histogram_height {
             histogram_height = scenario.histogram_height;
@@ -431,6 +434,9 @@ fn main() {
                 .expect("Error writing time series output file");
             })
     });
+    if compress_histogram {
+        assert!(!histogram_degrees_set.is_empty());
+    }
     assert!(histogram_height > 0);
     assert!(agent_time_series_height > 0);
     assert!(cell_time_series_height > 0);
