@@ -85,8 +85,8 @@ fn main() {
     let recovery_distro = Bernoulli::new(0.8).unwrap();
     let survival_distro = Bernoulli::new(0.8).unwrap();
     // Model parameter: Last time step of the simulation in each scenario
-    let last_time_step = 100;
-    let time_series_len = last_time_step + 1;
+    let last_time_step = 100u32;
+    let time_series_len = last_time_step as usize + 1;
     let mut scenarios = vec![
         {
             let mut scenario = Scenario::default();
@@ -231,7 +231,7 @@ fn main() {
                 }
             }
             // Dynamics: Time step
-            if time_step == 100 {
+            if time_step == last_time_step {
                 break;
             }
             time_step += 1;
