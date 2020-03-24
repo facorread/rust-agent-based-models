@@ -515,7 +515,10 @@ fn main() {
                                 .x_label_offset(x_label_offset)
                                 .x_label_formatter(&|x_position| {
                                     if compress_histogram {
-                                        format!("{}", x_degree[*x_position as usize].1)
+                                        match x_degree.get(*x_position as usize) {
+                                            Some(x_deg) => format!("{}", x_deg.1),
+                                            None => format!(""),
+                                        }
                                     } else {
                                         format!("{}", x_position)
                                     }
