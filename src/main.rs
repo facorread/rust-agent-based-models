@@ -349,8 +349,7 @@ fn main() {
                     time_step_results.c_i
                 )
                 .expect("Error writing time series output file");
-        })
+            })
     });
     eprintln!("\r                                                                         \nSimulation is complete.");
 }
-
