@@ -133,14 +133,16 @@ fn main() {
         };
         infection_probabilities.len()
     ];
+    // Format the output file names for the create_movie script
+    let create_movie = true;
     {
         let mut scenarios_iter = scenarios.iter_mut();
-        let mut id = 0;
+        let mut id = if create_movie { 0 } else { 1 };
         for &infection_probability in infection_probabilities.iter() {
-            id += 1;
             let scenario: &mut Scenario = scenarios_iter.next().unwrap();
             scenario.id = id;
             scenario.infection_probability = infection_probability;
+            id += 1;
         }
     }
     let compress_histogram = true;
@@ -436,8 +438,8 @@ fn main() {
     agent_time_series_height += 1;
     cell_time_series_height += 1;
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
-    let figure_step = next10(time_series_len as u32);
-    let figure_offset = next10(scenarios.len() as u32 * figure_step);
+    let figure_step = if create_movie { time_series_len as u32 } else { next10(time_series_len as u32) };
+    let figure_offset = if create_movie { 0 } else { next10(scenarios.len() as u32 * figure_step) };
     let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
     let _no_style = ShapeStyle {
         color: no_color.clone(),
@@ -458,15 +460,23 @@ fn main() {
                 .time_series
                 .par_iter()
                 .for_each(|time_step_results| {
-                    let file_number = figure_scenario_counter + time_step_results.time_step;
+                    let mut file_number = figure_scenario_counter + time_step_results.time_step;
+                    if create_movie {
+                        file_number += 1;
+                    }
                     for &dark_figures in &[false, true] {
-                        let figure_file_name = if dark_figures {
-                            format!("img_dark/image{}.png", file_number)
-                        } else {
-                            format!("img/image{}.png", file_number)
-                        };
+                        let figure_prefix = "img";
+                        let figure_file_name = format!("{}{}/{}.png",
+                        figure_prefix,
+                        if dark_figures { "_dark" } else { "" },
+                        file_number
+                        );
+                        let figure_path = std::path::Path::new(&figure_file_name);
+                        if figure_path.exists() {
+                            panic!("File {} already exists. Make sure the {} folders are clean before running this program. If they were clean, then this program is overwriting its own figures. Please review.", figure_path.to_str().unwrap(), figure_prefix);
+                        }
                         let drawing_area =
-                            BitMapBackend::new(&figure_file_name, (1920, 1080)).into_drawing_area();
+                            BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
                         let background_color = if dark_figures { &BLACK } else { &WHITE };
                         let color0 = if dark_figures { &WHITE } else { &BLACK };
                         let color1 = color0.mix(0.5);
