@@ -97,14 +97,16 @@ fn main() {
         };
         infection_probabilities.len()
     ];
+    // Format the output file names for the create_movie script.
+    let create_movie = true;
     {
         let mut scenarios_iter = scenarios.iter_mut();
-        let mut id = 0;
+        let mut id = if create_movie { 0 } else { 1 };
         for &infection_probability in infection_probabilities.iter() {
-            id += 1;
             let scenario: &mut Scenario = scenarios_iter.next().unwrap();
             scenario.id = id;
             scenario.infection_probability = infection_probability;
+            id += 1;
         }
     }
     scenarios.par_iter_mut().for_each(|scenario: &mut Scenario| {
