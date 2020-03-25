@@ -159,9 +159,7 @@ fn main() {
             let _k: AgentKey = health.insert(Health::S);
         }
         let infection_distro = Bernoulli::new(scenario.infection_probability).unwrap();
-        let mut time_step = 0;
-        let mut time_series_iter = scenario.time_series.iter_mut();
-        loop {
+        for time_step in 0..=last_time_step {
             // Simple, fast models do not need to print the time_step. Printing is slow.
             if time_step % 50 == 0 {
                 eprint!("\r                                                                         \rinfection_probability = {}, time_step = {}", scenario.infection_probability, time_step);
@@ -236,9 +234,9 @@ fn main() {
                             }
                         }
                     });
-                // Model measurements
+                // Measurements of the state of the model
+                let time_step_results = &mut scenario.time_series[time_step as usize];
                 {
-                    let time_step_results: &mut TimeStepResults = time_series_iter.next().unwrap();
                     time_step_results.time_step = time_step;
                     time_step_results.n = health.len() as u32;
                     if scenario.agent_time_series_height < time_step_results.n {
@@ -290,11 +288,6 @@ fn main() {
                     time_step_results.cell_health = cell_health.clone();
                 }
             }
-            // Dynamics: Time step
-            if time_step == last_time_step {
-                break;
-            }
-            time_step += 1;
             // Dynamics: infection spreads
             {
                 // Model state: Agent health the next time step
