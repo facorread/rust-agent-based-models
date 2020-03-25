@@ -440,6 +440,10 @@ fn main() {
     assert!(histogram_height > 0);
     assert!(agent_time_series_height > 0);
     assert!(cell_time_series_height > 0);
+     // A little extra space in the chart:
+    histogram_height += 1; 
+    agent_time_series_height += 1;
+    cell_time_series_height += 1;
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
     let figure_step = next10(time_series_len as u32);
     let figure_offset = next10(scenarios.len() as u32 * figure_step);
