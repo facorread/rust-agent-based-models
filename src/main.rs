@@ -433,8 +433,9 @@ fn main() {
     assert!(histogram_height > 0);
     assert!(agent_time_series_height > 0);
     assert!(cell_time_series_height > 0);
-     // A little extra space in the chart:
+    // A little extra space in the chart:
     histogram_height += 1; 
+    histogram_max_degree += 1;
     agent_time_series_height += 1;
     cell_time_series_height += 1;
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
