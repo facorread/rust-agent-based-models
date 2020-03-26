@@ -133,11 +133,9 @@ fn main() {
         };
         infection_probabilities.len()
     ];
-    // Format the output file names for the create_movie script
-    let create_movie = true;
     {
         let mut scenarios_iter = scenarios.iter_mut();
-        let mut id = if create_movie { 0 } else { 1 };
+        let mut id = 1;
         for &infection_probability in infection_probabilities.iter() {
             let scenario: &mut Scenario = scenarios_iter.next().unwrap();
             scenario.id = id;
@@ -439,6 +437,8 @@ fn main() {
     agent_time_series_height += 1;
     cell_time_series_height += 1;
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
+    // Format the output file names for the create_movie script
+    let create_movie = true;
     let figure_step = if create_movie { time_series_len as u32 } else { next10(time_series_len as u32) };
     let figure_offset = if create_movie { 0 } else { next10(scenarios.len() as u32 * figure_step) };
     let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
@@ -456,7 +456,7 @@ fn main() {
     let y_label_area_size = 60;
     scenarios.iter().for_each(|scenario| {
             eprint!("\r                                                                         \rSimulation complete. Creating figures for scenario {}/{}... ", scenario.id, scenarios.len());
-            let figure_scenario_counter = figure_offset + (scenario.id * figure_step);
+            let figure_scenario_counter = figure_offset + ((scenario.id - 1) * figure_step);
             scenario
                 .time_series
                 .par_iter()
