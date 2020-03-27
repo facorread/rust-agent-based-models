@@ -454,7 +454,7 @@ fn main() {
     let text_size1 = 17;
     let x_label_area_size = 40;
     let x_label_offset = 1;
-    let y_label_area_size = 50;
+    let y_label_area_size = 60;
     scenarios.iter().for_each(|scenario| {
             eprint!("\r                                                                         \rSimulation complete. Creating figures for scenario {}/{}... ", scenario.id, scenarios.len());
             let figure_scenario_counter = figure_offset + ((scenario.id - 1) * figure_step);
