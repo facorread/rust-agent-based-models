@@ -447,13 +447,14 @@ fn main() {
         filled: false,
         stroke_width: 0,
     };
-    let margin = 5;
+    let figure_margin = 5;
+    let bar_margin = 3;
     let thick_stroke = 4;
     let text_size0 = 30;
     let text_size1 = 17;
     let x_label_area_size = 40;
     let x_label_offset = 1;
-    let y_label_area_size = 60;
+    let y_label_area_size = 50;
     scenarios.iter().for_each(|scenario| {
             eprint!("\r                                                                         \rSimulation complete. Creating figures for scenario {}/{}... ", scenario.id, scenarios.len());
             let figure_scenario_counter = figure_offset + ((scenario.id - 1) * figure_step);
@@ -479,16 +480,19 @@ fn main() {
                         let drawing_area =
                             BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
                         let background_color = if dark_figures { &BLACK } else { &WHITE };
+                        let _transparent_color = background_color.mix(0.);
                         let color0 = if dark_figures { &WHITE } else { &BLACK };
-                        let color1 = color0.mix(0.5);
-                        let color2 = if dark_figures { &plotters::style::RGBColor(255, 192, 0) } else { &RED };
-                        let color3 = &plotters::style::RGBColor(0, 176, 80);
-                        let color4 = &plotters::style::RGBColor(32, 56, 100);
-                        let color_s = color3;
-                        let color_i = color4;
+                        let color1 = color0.mix(0.2);
+                        let color2 = color0.mix(0.1);
+                        let color3 = if dark_figures { &plotters::style::RGBColor(255, 192, 0) } else { &RED };
+                        let color4 = &plotters::style::RGBColor(0, 176, 80);
+                        let color5 = &plotters::style::RGBColor(32, 56, 100);
+                        let color_s = color4;
+                        let color_i = color5;
                         let _fill0 = color0.filled();
                         let fill1 = color1.filled();
                         let _fill2 = color2.filled();
+                        let _fill3 = color3.filled();
                         let text_color0 = |text_size| ("Calibri", text_size).into_font().color(color0);
                         drawing_area.fill(background_color).unwrap();
                         let (left_area, right_area) = drawing_area.split_horizontally(1920 - 1080);
@@ -506,13 +510,14 @@ fn main() {
                             let mut chart = ChartBuilder::on(&left_panels[1])
                                 .x_label_area_size(x_label_area_size)
                                 .y_label_area_size(y_label_area_size)
-                                .margin(margin)
+                                .margin(figure_margin)
                                 .caption("Network degree of agents", text_color0(text_size0))
                                 .build_ranged(x_range, 0..histogram_height)
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_2(&no_color)
+                                .line_style_1(&color1)
+                                .line_style_2(&color2)
                                 .y_desc("Number of agents")
                                 .x_desc(if compress_histogram {"Network degree (removing zeroes)"} else {"Network degree"})
                                 .axis_style(color0)
@@ -534,8 +539,32 @@ fn main() {
                             chart
                                 .draw_series(
                                     Histogram::vertical(&chart)
+                                        .style(background_color.filled())
+                                        .margin(bar_margin)
+                                        .data(time_step_results.degree_histogram.iter().map(
+                                            |(degree, weight)| {
+                                                (
+                                                    if compress_histogram {
+                                                        x_degree
+                                                            .iter()
+                                                            .find(|&(_, &deg)| deg == degree)
+                                                            .unwrap()
+                                                            .0
+                                                            as i32
+                                                    } else {
+                                                        *degree
+                                                    },
+                                                    *weight,
+                                                )
+                                            },
+                                        )),
+                                )
+                                .unwrap();
+                            chart
+                                .draw_series(
+                                    Histogram::vertical(&chart)
                                         .style(color0)
-                                        .margin(0)
+                                        .margin(bar_margin)
                                         .data(time_step_results.degree_histogram.iter().map(
                                             |(degree, weight)| {
                                                 (
@@ -560,13 +589,14 @@ fn main() {
                             let mut chart = ChartBuilder::on(&left_panels[2])
                                 .x_label_area_size(x_label_area_size)
                                 .y_label_area_size(y_label_area_size)
-                                .margin(margin)
+                                .margin(figure_margin)
                                 .caption("Populations of agents", text_color0(text_size0))
                                 .build_ranged(0..(time_series_len as u32), 0..agent_time_series_height)
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_2(&no_color)
+                                .line_style_1(&color1)
+                                .line_style_2(&color2)
                                 .y_desc("Number of agents")
                                 .x_desc("Time")
                                 .axis_style(color0)
@@ -612,7 +642,7 @@ fn main() {
                             let mut chart = ChartBuilder::on(&left_panels[3])
                                 .x_label_area_size(x_label_area_size)
                                 .y_label_area_size(y_label_area_size)
-                                .margin(margin)
+                                .margin(figure_margin)
                                 .caption("Infection of cells", text_color0(text_size0))
                                 .build_ranged(0..(time_series_len as u32), 0..cell_time_series_height)
                                 .unwrap();
