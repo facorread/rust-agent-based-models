@@ -16,7 +16,10 @@
 */
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
-use rand::distributions::{weighted::WeightedIndex, Bernoulli, Distribution};
+use rand::distributions::{
+    weighted::{WeightedError, WeightedIndex},
+    Bernoulli, Distribution,
+};
 use rand_distr::Normal;
 use rayon::prelude::*;
 use slotmap::{SecondaryMap, SlotMap};
@@ -162,38 +165,38 @@ fn main() {
                             0
                         };
                         if new_links > 0 {
-                            let dist_result = {
-                                let mut weights_tmp = weights_vec.clone();
-                                // This agent cannot make a link to itself; set its weight to 0.
-                                weights_tmp[agent_idx] = 0;
-                                // Friends are ineligible for a new link; set friends' weights to 0.
-                                links.values().for_each(|&(key0, key1)| {
-                                    if key0 == agent_key {
-                                        weights_tmp[idx_map[key1]] = 0;
-                                    }
-                                    if key1 == agent_key {
-                                        weights_tmp[idx_map[key0]] = 0;
-                                    }
-                                });
-                                WeightedIndex::new(weights_tmp)
-                            };
-                            if dist_result.is_ok() {
-                                let mut dist = dist_result.unwrap();
-                                let mut k = 0;
-                                loop {
-                                    let friend_idx = dist.sample(&mut rng);
-                                    links.insert((agent_key, keys_vec[friend_idx]));
-                                    weights_vec[agent_idx] += 1;
-                                    weights_vec[friend_idx] += 1;
-                                    k += 1;
-                                    if k == new_links {
-                                        break;
-                                    }
-                                    // Make friend ineligible for a new link; set its weight to 0.
-                                    if dist.update_weights(&[(friend_idx, &0)]).is_err() {
-                                        break;
-                                    }
+                            let mut weights_tmp = weights_vec.clone();
+                            // This agent cannot make a link to itself; set its weight to 0.
+                            weights_tmp[agent_idx] = 0;
+                            // Friends are ineligible for a new link; set friends' weights to 0.
+                            links.values().for_each(|&(key0, key1)| {
+                                if key0 == agent_key {
+                                    weights_tmp[idx_map[key1]] = 0;
                                 }
+                                if key1 == agent_key {
+                                    weights_tmp[idx_map[key0]] = 0;
+                                }
+                            });
+                            match WeightedIndex::new(weights_tmp) {
+                                Ok(mut dist) => {
+                                    let mut k = 0;
+                                    loop {
+                                        let friend_idx = dist.sample(&mut rng);
+                                        links.insert((agent_key, keys_vec[friend_idx]));
+                                        weights_vec[agent_idx] += 1;
+                                        weights_vec[friend_idx] += 1;
+                                        k += 1;
+                                        if k == new_links {
+                                            break;
+                                        }
+                                        // Make friend ineligible for a new link; set its weight to 0.
+                                        if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                                            break;
+                                        }
+                                    }
+                                },
+                                Err(WeightedError::AllWeightsZero) => {},
+                                Err(e) => panic!("Internal error OsXJWc0sHx: {}. Please debug.", e),
                             }
                         }
                     });
