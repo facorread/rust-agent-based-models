@@ -17,7 +17,10 @@
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
 use plotters::prelude::*;
-use rand::distributions::{weighted::WeightedIndex, Bernoulli, Distribution};
+use rand::distributions::{
+    weighted::{WeightedError, WeightedIndex},
+    Bernoulli, Distribution,
+};
 use rand_distr::Normal;
 use rayon::prelude::*;
 use slotmap::{SecondaryMap, SlotMap};
@@ -199,38 +202,38 @@ fn main() {
                             0
                         };
                         if new_links > 0 {
-                            let dist_result = {
-                                let mut weights_tmp = weights_vec.clone();
-                                // This agent cannot make a link to itself; set its weight to 0.
-                                weights_tmp[agent_idx] = 0;
-                                // Friends are ineligible for a new link; set friends' weights to 0.
-                                links.values().for_each(|&(key0, key1)| {
-                                    if key0 == agent_key {
-                                        weights_tmp[idx_map[key1]] = 0;
-                                    }
-                                    if key1 == agent_key {
-                                        weights_tmp[idx_map[key0]] = 0;
-                                    }
-                                });
-                                WeightedIndex::new(weights_tmp)
-                            };
-                            if dist_result.is_ok() {
-                                let mut dist = dist_result.unwrap();
-                                let mut k = 0;
-                                loop {
-                                    let friend_idx = dist.sample(&mut rng);
-                                    links.insert((agent_key, keys_vec[friend_idx]));
-                                    weights_vec[agent_idx] += 1;
-                                    weights_vec[friend_idx] += 1;
-                                    k += 1;
-                                    if k == new_links {
-                                        break;
-                                    }
-                                    // Make friend ineligible for a new link; set its weight to 0.
-                                    if dist.update_weights(&[(friend_idx, &0)]).is_err() {
-                                        break;
-                                    }
+                            let mut weights_tmp = weights_vec.clone();
+                            // This agent cannot make a link to itself; set its weight to 0.
+                            weights_tmp[agent_idx] = 0;
+                            // Friends are ineligible for a new link; set friends' weights to 0.
+                            links.values().for_each(|&(key0, key1)| {
+                                if key0 == agent_key {
+                                    weights_tmp[idx_map[key1]] = 0;
                                 }
+                                if key1 == agent_key {
+                                    weights_tmp[idx_map[key0]] = 0;
+                                }
+                            });
+                            match WeightedIndex::new(weights_tmp) {
+                                Ok(mut dist) => {
+                                    let mut k = 0;
+                                    loop {
+                                        let friend_idx = dist.sample(&mut rng);
+                                        links.insert((agent_key, keys_vec[friend_idx]));
+                                        weights_vec[agent_idx] += 1;
+                                        weights_vec[friend_idx] += 1;
+                                        k += 1;
+                                        if k == new_links {
+                                            break;
+                                        }
+                                        // Make friend ineligible for a new link; set its weight to 0.
+                                        if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                                            break;
+                                        }
+                                    }
+                                },
+                                Err(WeightedError::AllWeightsZero) => {},
+                                Err(e) => panic!("Internal error OsXJWc0sHx: {}. Please debug.", e),
                             }
                         }
                     });
@@ -391,10 +394,8 @@ fn main() {
             for degree in scenario.histogram_degrees_set.iter() {
                 histogram_degrees_set.insert(degree);
             }
-        } else {
-            if histogram_max_degree < scenario.histogram_max_degree {
-                histogram_max_degree = scenario.histogram_max_degree;
-            }
+        } else if histogram_max_degree < scenario.histogram_max_degree {
+            histogram_max_degree = scenario.histogram_max_degree;
         }
         if histogram_height < scenario.histogram_height {
             histogram_height = scenario.histogram_height;
@@ -432,15 +433,23 @@ fn main() {
     assert!(agent_time_series_height > 0);
     assert!(cell_time_series_height > 0);
     // A little extra space in the chart:
-    histogram_height += 1; 
+    histogram_height += 1;
     histogram_max_degree += 1;
     agent_time_series_height += 1;
     cell_time_series_height += 1;
     let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
     // Format the output file names for the create_movie script
     let create_movie = true;
-    let figure_step = if create_movie { time_series_len as u32 } else { next10(time_series_len as u32) };
-    let figure_offset = if create_movie { 0 } else { next10(scenarios.len() as u32 * figure_step) };
+    let figure_step = if create_movie {
+        time_series_len as u32
+    } else {
+        next10(time_series_len as u32)
+    };
+    let figure_offset = if create_movie {
+        0
+    } else {
+        next10(scenarios.len() as u32 * figure_step)
+    };
     let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
     let _no_style = ShapeStyle {
         color: no_color.clone(),
@@ -608,7 +617,7 @@ fn main() {
                                 scenario.time_series.iter()
                                 .skip_while(|tsr| tsr.time_step < time_step_results.time_step)
                                 .map(|time_step_results| (time_step_results.time_step, time_step_results.n)),
-                                fill1.clone()
+                                fill1
                                 ))
                                 .unwrap();
                             chart.draw_series(LineSeries::new(
@@ -622,7 +631,7 @@ fn main() {
                                 scenario.time_series.iter()
                                 .skip_while(|tsr| tsr.time_step < time_step_results.time_step)
                                 .map(|time_step_results| (time_step_results.time_step, time_step_results.i)),
-                                color_i.clone()
+                                color_i
                             ))
                             .unwrap();
                             chart.draw_series(LineSeries::new(
@@ -660,7 +669,7 @@ fn main() {
                                 scenario.time_series.iter()
                                 .skip_while(|tsr| tsr.time_step < time_step_results.time_step)
                                 .map(|time_step_results| (time_step_results.time_step, time_step_results.c_i)),
-                                color_i.clone()
+                                color_i
                             ))
                             .unwrap();
                             chart.draw_series(LineSeries::new(
