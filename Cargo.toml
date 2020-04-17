@@ -6,6 +6,17 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["all-graphics"] # Rust performs tests using these features only. You are on your own when using different features.
+# default = ["no-graphics"] # Activate this for a high performance model that only outputs tables, no graphics.
+all-graphics = ["landscape-graphics", "net-graphics"]
+no-graphics = ["landscape", "net"] # 
+landscape-graphics = ["landscape", "graphics"]
+net-graphics = ["net", "graphics"]
+graphics = [] # Enable figure outputs
+landscape = [] # Enable the landscape
+net = [] # Enable social networks
+
 [dependencies]
 plotters = "0.2.12"
 rand =  "0.7.3"
