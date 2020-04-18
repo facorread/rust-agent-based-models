@@ -31,11 +31,11 @@ Please send me a short email to let me know if you find any of these ideas usefu
 
 ## Advanced usage
 
-This software uses [Cargo's features] and [Rust's conditional compilation] to enable and disable graphics, social network, and landscape. By default, `cargo.toml` activates the `all-graphics` feature. This default is the best option for most cases. This is also the only feature that undergoes testing.
+This software uses [Cargo's features] and [Rust's conditional compilation] to enable and disable graphics, social network, and landscape. By default, `cargo.toml` activates the `all-graphics` feature. This default is the best option for most cases. This is also the only configuration that undergoes automated testing at GitHub and GitLab.
 
-The selections made at `cargo.toml` translate into code at `main.rs` through the `#[cfg(feature = )]` attributes. For example, `struct TimeStepResults` implements or omits fields depending on whether the `landscape-graphics`, `net-graphics`, or `graphics` features are enabled. For models that study numerous scenarios, the smaller the size of `TimeStepResults`, the faster.
+The selections made at `cargo.toml` enable or disable code at `main.rs` through the `#[cfg(feature = )]` attributes. For example, `struct TimeStepResults` includes or omits fields depending on whether the `landscape-graphics`, `net-graphics`, or `graphics` features are enabled. For models that study numerous scenarios, the smaller the size of `TimeStepResults`, the faster.
 
-Take finer control of development and performance of your model by introducing features you can disable or enable.
+The features at Cargo.toml, namely landscape and net, are arbitrary examples based on the structure of the model. Take finer control of development, memory, and performance of your model by introducing features you can disable or enable with just a line of code.
 
 ## Why not make a crate?
 
@@ -45,7 +45,7 @@ Some individual components of an ABM can exist in independent crates. One of the
 
 ## Why is the software so slow?
 
-By default, [Visual Studio Code] runs the program using the `debug` profile. The `debug` profile provides vscode with the essential information to develop a correct, safe model; in this profile, the [`plotters`] crate conducts a multitude of checks for memory and data safety to carefully produce the model figures. Because of this, the development phase of the model should use a very small number of scenarios and a short time span. Alternatively, a `return()` instruction in the correct place can temporarily serve to exit the program before producing any figures. Finally, the `no-graphics` feature can be activated in `cargo.toml`. See the *Advanced usage* section above for more details.
+By default, [Visual Studio Code] runs the program using the `debug` profile. The profile provides vscode with the essential information to examine and step into model code and memory; in this profile, the [`plotters`] crate conducts a multitude of checks for memory and data safety to carefully produce the model figures; this takes significant time and makes the software slow. To improve development time, model protoypes should use very few scenarios and a short time span. Alternatively, a `return()` instruction can exit the program before producing any figures. Finally, the `no-graphics` feature can be activated in `cargo.toml`. See the *Advanced usage* section above for more details.
 
 When the model is ready to work with more scenarios and long time spans, the best option is to use the `release` profile. For this, the command `cargo run --release` can run on the Command Prompt, PowerShell, or the [Visual Studio Code] console. This profile produces figures and output data significantly faster than the `debug` profile.
 
