@@ -122,6 +122,10 @@ fn next10(mut x: u32) -> u32 {
 }
 
 fn main() {
+    // Only use one thread to facilitate debugging. One thread makes the program sequential.
+    #[cfg(debug_assertions)] // Only when debugging should this instruction happen.
+    #[rustfmt::skip] // Prevent rustfmt (and thus vscode) from splitting this long line.
+    rayon::ThreadPoolBuilder::new().num_threads(1).build_global().unwrap();
     // Model parameter: Initial number of agents
     let n0: usize = 1000;
     // Model parameter: Scale-free network parameter: new links per agent
