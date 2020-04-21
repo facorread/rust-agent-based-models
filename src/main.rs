@@ -100,27 +100,6 @@ struct Scenario {
     time_series: std::vec::Vec<TimeStepResults>,
 }
 
-/// Returns the smallest multiple of 10 that is larger than x
-///
-/// # Examples
-///
-/// ```
-/// assert_eq!(next10(3), 10);
-/// assert_eq!(next10(23), 100);
-/// assert_eq!(next10(376), 1000);
-/// assert_eq!(next10(3120), 10000);
-/// assert_eq!(next10(1000), 10000);
-/// ```
-#[cfg(feature = "graphics")]
-fn next10(mut x: u32) -> u32 {
-    let mut result = 1;
-    while x > 0 {
-        result *= 10;
-        x -= x % result;
-    }
-    result
-}
-
 fn main() {
     // Only use one thread to facilitate debugging. One thread makes the program sequential.
     #[cfg(debug_assertions)] // Only when debugging should this instruction happen.
@@ -160,12 +139,10 @@ fn main() {
     ];
     {
         let mut scenarios_iter = scenarios.iter_mut();
-        let mut id = 1;
-        for &infection_probability in infection_probabilities.iter() {
+        for (id, &infection_probability) in infection_probabilities.iter().enumerate() {
             let scenario: &mut Scenario = scenarios_iter.next().unwrap();
-            scenario.id = id;
+            scenario.id = id as u32;
             scenario.infection_probability = infection_probability;
-            id += 1;
         }
     }
     #[cfg(feature = "net-graphics")]
@@ -524,18 +501,6 @@ fn main() {
         }
         #[cfg(feature = "net-graphics")]
         let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
-        // Format the output file names for the create_movie script
-        let create_movie = true;
-        let figure_step = if create_movie {
-            time_series_len as u32
-        } else {
-            next10(time_series_len as u32)
-        };
-        let figure_offset = if create_movie {
-            0
-        } else {
-            next10(scenarios.len() as u32 * figure_step)
-        };
         let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
         let _no_style = ShapeStyle {
             color: no_color.clone(),
@@ -554,15 +519,12 @@ fn main() {
         let y_label_area_size = 60;
         scenarios.iter().for_each(|scenario| {
                 eprint!("\r                                                                         \rSimulation complete. Creating figures for scenario {}/{}... ", scenario.id, scenarios.len());
-                let figure_scenario_counter = figure_offset + ((scenario.id - 1) * figure_step);
+                let figure_scenario_counter = scenario.id * time_series_len as u32;
                 scenario
                     .time_series
                     .par_iter()
                     .for_each(|time_step_results| {
-                        let mut file_number = figure_scenario_counter + time_step_results.time_step;
-                        if create_movie {
-                            file_number += 1;
-                        }
+                        let file_number = figure_scenario_counter + time_step_results.time_step + 1;
                         for &dark_figures in &[false, true] {
                             let figure_prefix = "img";
                             let figure_file_name = format!("{}{}/{}.png",
@@ -789,22 +751,4 @@ fn main() {
             });
     }
     eprintln!("\r                                                                         \nSimulation is complete.");
-}
-
-#[cfg(test)]
-mod tests {
-    #[cfg(feature = "graphics")]
-    use super::*;
-
-    #[test]
-    fn test() {
-        #[cfg(feature = "graphics")]
-        {
-            assert_eq!(next10(3), 10);
-            assert_eq!(next10(23), 100);
-            assert_eq!(next10(376), 1000);
-            assert_eq!(next10(3120), 10000);
-            assert_eq!(next10(1000), 10000);
-        }
-    }
 }
