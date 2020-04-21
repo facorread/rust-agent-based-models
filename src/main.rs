@@ -139,10 +139,13 @@ fn main() {
     ];
     {
         let mut scenarios_iter = scenarios.iter_mut();
-        for (id, &infection_probability) in infection_probabilities.iter().enumerate() {
+        let mut id = 0;
+        #[allow(clippy::explicit_counter_loop)]
+        for &infection_probability in infection_probabilities.iter() {
             let scenario: &mut Scenario = scenarios_iter.next().unwrap();
-            scenario.id = id as u32;
+            scenario.id = id;
             scenario.infection_probability = infection_probability;
+            id += 1;
         }
     }
     #[cfg(feature = "net-graphics")]
