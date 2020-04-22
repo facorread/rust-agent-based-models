@@ -4,6 +4,7 @@
 **/*.rs.bk
 Cargo.lock
 *.csv
+*.log
 *.mkv
 *.png
 *.tmp
