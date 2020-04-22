@@ -174,272 +174,289 @@ fn main() {
             id += 1;
         }
     }
+    let clean_term =
+        "\r                                                                         \r";
     #[cfg(feature = "net-graphics")]
     let compress_histogram = true;
-    scenarios.par_iter_mut().for_each(|scenario: &mut Scenario| {
-        let mut rng = rand::thread_rng();
-        // Model state: Agent health
-        let mut health = SlotMap::with_capacity_and_key(2 * n0);
-        // Model state: Bidirectional links between agents
-        #[cfg(feature = "net")]
-        let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
-        // Model state: Health status of each cell in the landscape
-        #[cfg(feature = "landscape")]
-        let mut cell_health = vec![Health::S; coord.size()];
-        // Model state: Cell health storage for the next time step. This implements parallel updating of cells.
-        #[cfg(feature = "landscape")]
-        let mut next_cell_health = cell_health.clone();
-        // Model initialization: Agents
-        while health.len() < n0 {
-            let _k: AgentKey = health.insert(Health::S);
-        }
-        let infection_distro = Bernoulli::new(scenario.infection_probability).unwrap();
-        for (time_step, time_step_results) in scenario.time_series.iter_mut().enumerate() {
-            // Simple, fast models do not need to print the time_step. Printing is slow.
-            if time_step % 50 == 0 {
-                eprint!("\r                                                                         \rinfection_probability = {}, time_step = {}", scenario.infection_probability, time_step);
-            }
-            // Initialization of this time step: Network seed
+    scenarios
+        .par_iter_mut()
+        .for_each(|scenario: &mut Scenario| {
+            let mut rng = rand::thread_rng();
+            // Model state: Agent health
+            let mut health = SlotMap::with_capacity_and_key(2 * n0);
+            // Model state: Bidirectional links between agents
             #[cfg(feature = "net")]
-            {
-                if links.is_empty() && health.len() > 1 {
-                    let mut h_it = health.iter();
-                    let (key0, _value) = h_it.next().unwrap();
-                    let (key1, _value) = h_it.next().unwrap();
-                    let _link_id: LinkKey = links.insert((key0, key1));
+            let mut links = slotmap::SlotMap::with_capacity_and_key(n0 * n0);
+            // Model state: Health status of each cell in the landscape
+            #[cfg(feature = "landscape")]
+            let mut cell_health = vec![Health::S; coord.size()];
+            // Model state: Cell health storage for the next time step. This implements parallel updating of cells.
+            #[cfg(feature = "landscape")]
+            let mut next_cell_health = cell_health.clone();
+            // Model initialization: Agents
+            while health.len() < n0 {
+                let _k: AgentKey = health.insert(Health::S);
+            }
+            let infection_distro = Bernoulli::new(scenario.infection_probability).unwrap();
+            for (time_step, time_step_results) in scenario.time_series.iter_mut().enumerate() {
+                // Simple, fast models do not need to print the time_step. Printing is slow.
+                if time_step % 50 == 0 {
+                    eprint!(
+                        "{}infection_probability = {}, time_step = {}",
+                        clean_term, scenario.infection_probability, time_step
+                    );
                 }
-                // Initialization of this time step: Network
-                let keys_vec: Vec<AgentKey> = health.keys().collect();
-                let mut idx_map = SecondaryMap::with_capacity(health.capacity());
-                let mut weights_vec: Vec<i32> = {
-                    let mut weights_map = SecondaryMap::with_capacity(health.capacity());
-                    keys_vec.iter().enumerate().for_each(|(idx, &k)| {
-                        weights_map.insert(k, 0);
-                        idx_map.insert(k, idx);
-                    });
-                    links.values().for_each(|&(key0, key1)| {
-                        weights_map[key0] += 1;
-                        weights_map[key1] += 1;
-                    });
-                    keys_vec.iter().map(|&k| weights_map[k]).collect()
-                };
-                keys_vec.iter().enumerate().for_each(|(agent_idx, &agent_key)| {
-                    let new_links = if weights_vec[agent_idx] == 0 {
-                        net_k
-                    } else if link_distro.sample(&mut rng) {
-                        1
-                    } else {
-                        0
-                    };
-                    if new_links > 0 {
-                        let mut weights_tmp = weights_vec.clone();
-                        // This agent cannot make a link to itself; set its weight to 0.
-                        weights_tmp[agent_idx] = 0;
-                        // Friends are ineligible for a new link; set friends' weights to 0.
+                // Initialization of this time step: Network seed
+                #[cfg(feature = "net")]
+                {
+                    if links.is_empty() && health.len() > 1 {
+                        let mut h_it = health.iter();
+                        let (key0, _value) = h_it.next().unwrap();
+                        let (key1, _value) = h_it.next().unwrap();
+                        let _link_id: LinkKey = links.insert((key0, key1));
+                    }
+                    // Initialization of this time step: Network
+                    let keys_vec: Vec<AgentKey> = health.keys().collect();
+                    let mut idx_map = SecondaryMap::with_capacity(health.capacity());
+                    let mut weights_vec: Vec<i32> = {
+                        let mut weights_map = SecondaryMap::with_capacity(health.capacity());
+                        keys_vec.iter().enumerate().for_each(|(idx, &k)| {
+                            weights_map.insert(k, 0);
+                            idx_map.insert(k, idx);
+                        });
                         links.values().for_each(|&(key0, key1)| {
-                            if key0 == agent_key {
-                                weights_tmp[idx_map[key1]] = 0;
-                            }
-                            if key1 == agent_key {
-                                weights_tmp[idx_map[key0]] = 0;
+                            weights_map[key0] += 1;
+                            weights_map[key1] += 1;
+                        });
+                        keys_vec.iter().map(|&k| weights_map[k]).collect()
+                    };
+                    keys_vec
+                        .iter()
+                        .enumerate()
+                        .for_each(|(agent_idx, &agent_key)| {
+                            let new_links = if weights_vec[agent_idx] == 0 {
+                                net_k
+                            } else if link_distro.sample(&mut rng) {
+                                1
+                            } else {
+                                0
+                            };
+                            if new_links > 0 {
+                                let mut weights_tmp = weights_vec.clone();
+                                // This agent cannot make a link to itself; set its weight to 0.
+                                weights_tmp[agent_idx] = 0;
+                                // Friends are ineligible for a new link; set friends' weights to 0.
+                                links.values().for_each(|&(key0, key1)| {
+                                    if key0 == agent_key {
+                                        weights_tmp[idx_map[key1]] = 0;
+                                    }
+                                    if key1 == agent_key {
+                                        weights_tmp[idx_map[key0]] = 0;
+                                    }
+                                });
+                                match WeightedIndex::new(weights_tmp) {
+                                    Ok(mut dist) => {
+                                        let mut k = 0;
+                                        loop {
+                                            let friend_idx = dist.sample(&mut rng);
+                                            links.insert((agent_key, keys_vec[friend_idx]));
+                                            weights_vec[agent_idx] += 1;
+                                            weights_vec[friend_idx] += 1;
+                                            k += 1;
+                                            if k == new_links {
+                                                break;
+                                            }
+                                            // Make friend ineligible for a new link; set its weight to 0.
+                                            if dist.update_weights(&[(friend_idx, &0)]).is_err() {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    Err(WeightedError::AllWeightsZero) => {}
+                                    Err(e) => {
+                                        panic!("Internal error OsXJWc0sHx: {}. Please debug.", e)
+                                    }
+                                }
                             }
                         });
-                        match WeightedIndex::new(weights_tmp) {
-                            Ok(mut dist) => {
-                                let mut k = 0;
-                                loop {
-                                    let friend_idx = dist.sample(&mut rng);
-                                    links.insert((agent_key, keys_vec[friend_idx]));
-                                    weights_vec[agent_idx] += 1;
-                                    weights_vec[friend_idx] += 1;
-                                    k += 1;
-                                    if k == new_links {
-                                        break;
-                                    }
-                                    // Make friend ineligible for a new link; set its weight to 0.
-                                    if dist.update_weights(&[(friend_idx, &0)]).is_err() {
-                                        break;
-                                    }
-                                }
-                            },
-                            Err(WeightedError::AllWeightsZero) => {},
-                            Err(e) => panic!("Internal error OsXJWc0sHx: {}. Please debug.", e),
+                    // Model measurements: Network
+                    time_step_results.d_s = match keys_vec
+                        .iter()
+                        .zip(weights_vec.iter())
+                        .filter(|(&k, _w)| health[k] == Health::S)
+                        .max_by_key(|(_k, &w)| w)
+                    {
+                        Some((_k, &w)) => w,
+                        None => 0,
+                    };
+                    time_step_results.d_i = match keys_vec
+                        .iter()
+                        .zip(weights_vec.iter())
+                        .filter(|(&k, _w)| health[k] == Health::I)
+                        .max_by_key(|(_k, &w)| w)
+                    {
+                        Some((_k, &w)) => w,
+                        None => 0,
+                    };
+                    #[cfg(feature = "graphics")]
+                    {
+                        for weight in weights_vec {
+                            *time_step_results
+                                .degree_histogram
+                                .entry(weight)
+                                .or_insert(0) += 1;
                         }
-                    }
-                });
-                // Model measurements: Network
-                time_step_results.d_s = match keys_vec
-                    .iter()
-                    .zip(weights_vec.iter())
-                    .filter(|(&k, _w)| health[k] == Health::S)
-                    .max_by_key(|(_k, &w)| w)
-                {
-                    Some((_k, &w)) => w,
-                    None => 0,
-                };
-                time_step_results.d_i = match keys_vec
-                    .iter()
-                    .zip(weights_vec.iter())
-                    .filter(|(&k, _w)| health[k] == Health::I)
-                    .max_by_key(|(_k, &w)| w)
-                {
-                    Some((_k, &w)) => w,
-                    None => 0,
-                };
-                #[cfg(feature = "graphics")]
-                {
-                    for weight in weights_vec {
-                        *time_step_results
-                            .degree_histogram
-                            .entry(weight)
-                            .or_insert(0) += 1;
-                    }
-                    for (&weight, &frequency) in &time_step_results.degree_histogram {
-                        if compress_histogram {
-                            scenario.histogram_degrees_set.insert(weight);
-                        } else if scenario.histogram_max_degree < weight {
-                            scenario.histogram_max_degree = weight;
-                        }
-                        if scenario.histogram_height < frequency {
-                            scenario.histogram_height = frequency;
+                        for (&weight, &frequency) in &time_step_results.degree_histogram {
+                            if compress_histogram {
+                                scenario.histogram_degrees_set.insert(weight);
+                            } else if scenario.histogram_max_degree < weight {
+                                scenario.histogram_max_degree = weight;
+                            }
+                            if scenario.histogram_height < frequency {
+                                scenario.histogram_height = frequency;
+                            }
                         }
                     }
                 }
-            }
-            // Model measurements: agents
-            {
-                time_step_results.time_step = time_step as u32;
-                time_step_results.n = health.len() as u32;
-                health.values().for_each(|h| match h {
-                    Health::S => time_step_results.s += 1,
-                    Health::I => time_step_results.i += 1,
-                });
-                #[cfg(feature = "landscape")]
+                // Model measurements: agents
                 {
-                    time_step_results.c_i = cell_health.iter().filter(|&&h| h == Health::I).count() as u32;
+                    time_step_results.time_step = time_step as u32;
+                    time_step_results.n = health.len() as u32;
+                    health.values().for_each(|h| match h {
+                        Health::S => time_step_results.s += 1,
+                        Health::I => time_step_results.i += 1,
+                    });
+                    #[cfg(feature = "landscape")]
+                    {
+                        time_step_results.c_i =
+                            cell_health.iter().filter(|&&h| h == Health::I).count() as u32;
+                    }
+                    #[cfg(feature = "graphics")]
+                    {
+                        if scenario.agent_time_series_height < time_step_results.n {
+                            scenario.agent_time_series_height = time_step_results.n;
+                        }
+                    }
+                    #[cfg(feature = "landscape-graphics")]
+                    {
+                        if scenario.cell_time_series_height < time_step_results.c_i {
+                            scenario.cell_time_series_height = time_step_results.c_i;
+                        }
+                        time_step_results.cell_health = cell_health.clone();
+                    }
                 }
-                #[cfg(feature = "graphics")]
+                // Dynamics: infection spreads
                 {
-                    if scenario.agent_time_series_height < time_step_results.n {
-                        scenario.agent_time_series_height = time_step_results.n;
-                    }
-                }
-                #[cfg(feature = "landscape-graphics")]
-                {
-                    if scenario.cell_time_series_height < time_step_results.c_i {
-                        scenario.cell_time_series_height = time_step_results.c_i;
-                    }
-                    time_step_results.cell_health = cell_health.clone();
-                }
-            }
-            // Dynamics: infection spreads
-            {
-                // Model state: Agent health the next time step
-                let mut next_health = SecondaryMap::with_capacity(health.capacity());
-                #[cfg(feature = "net")]
-                links.values().for_each(|&(key0, key1)| {
-                    let h0 = health[key0];
-                    let h1 = health[key1];
-                    if h0 == Health::S && h1 == Health::I && infection_distro.sample(&mut rng) {
-                        next_health.insert(key0, Health::I);
-                    }
-                    if h1 == Health::S && h0 == Health::I && infection_distro.sample(&mut rng) {
-                        next_health.insert(key1, Health::I);
-                    }
-                });
-                if time_step == 0 {
-                    health.iter().for_each(|(k, &h)| {
-                        if h == Health::S && initial_infection_distro.sample(&mut rng) {
-                            next_health.insert(k, Health::I);
+                    // Model state: Agent health the next time step
+                    let mut next_health = SecondaryMap::with_capacity(health.capacity());
+                    #[cfg(feature = "net")]
+                    links.values().for_each(|&(key0, key1)| {
+                        let h0 = health[key0];
+                        let h1 = health[key1];
+                        if h0 == Health::S && h1 == Health::I && infection_distro.sample(&mut rng) {
+                            next_health.insert(key0, Health::I);
+                        }
+                        if h1 == Health::S && h0 == Health::I && infection_distro.sample(&mut rng) {
+                            next_health.insert(key1, Health::I);
                         }
                     });
-                }
-                health.iter().for_each(|(k, &h)| {
-                    // Choose a random cell to visit
-                    #[cfg(feature = "landscape")]
-                    let x = visit_distro.sample(&mut rng) as i32;
-                    #[cfg(feature = "landscape")]
-                    let y = visit_distro.sample(&mut rng) as i32;
-                    #[cfg(feature = "landscape")]
-                    let idx = coord.index(x, y);
-                    match h {
-                        Health::S => {
-                            #[cfg(feature = "landscape")]
-                            {
-                                if cell_health[idx] == Health::I && infection_distro.sample(&mut rng) {
-                                    // Cell infects agent
-                                    next_health.insert(k, Health::I);
-                                }
+                    if time_step == 0 {
+                        health.iter().for_each(|(k, &h)| {
+                            if h == Health::S && initial_infection_distro.sample(&mut rng) {
+                                next_health.insert(k, Health::I);
                             }
-                        },
-                        Health::I => {
-                            #[cfg(feature = "landscape")]
-                            {
-                                if cell_health[idx] == Health::S && infection_distro.sample(&mut rng) {
-                                    // Agent infects cell
-                                    next_cell_health[idx] = Health::I;
-                                }
-                            }
-                            if recovery_distro.sample(&mut rng) {
-                                next_health.insert(k, Health::S);
-                            }
-                        }
-                    };
-                });
-                // Dynamics: Disease spreads across cells and infectious cells recover
-                #[cfg(feature = "landscape")]
-                coord.for_each8(
-                    |this_cell_index, neighbors| match cell_health[this_cell_index] {
-                        Health::S => {
-                            for neighbor_index in neighbors {
-                                if cell_health[*neighbor_index] == Health::I
-                                    && infection_distro.sample(&mut rng)
-                                {
-                                    next_cell_health[this_cell_index] = Health::I;
-                                    break;
-                                }
-                            }
-                        }
-                        Health::I => {
-                            if recovery_distro.sample(&mut rng) {
-                                next_cell_health[this_cell_index] = Health::S;
-                            }
-                        }
-                    },
-                );
-                // Dynamics: After spreading the infection, some infectious agents die
-                health.retain(|_agent_key, h| match h {
-                    Health::S => true,
-                    Health::I => survival_distro.sample(&mut rng),
-                });
-                // Dynamics: Remaining agents update in parallel
-                next_health.iter().for_each(|(k, &next_h)| {
-                    if let Some(h) = health.get_mut(k) {
-                        *h = next_h;
+                        });
                     }
+                    health.iter().for_each(|(k, &h)| {
+                        // Choose a random cell to visit
+                        #[cfg(feature = "landscape")]
+                        let x = visit_distro.sample(&mut rng) as i32;
+                        #[cfg(feature = "landscape")]
+                        let y = visit_distro.sample(&mut rng) as i32;
+                        #[cfg(feature = "landscape")]
+                        let idx = coord.index(x, y);
+                        match h {
+                            Health::S => {
+                                #[cfg(feature = "landscape")]
+                                {
+                                    if cell_health[idx] == Health::I
+                                        && infection_distro.sample(&mut rng)
+                                    {
+                                        // Cell infects agent
+                                        next_health.insert(k, Health::I);
+                                    }
+                                }
+                            }
+                            Health::I => {
+                                #[cfg(feature = "landscape")]
+                                {
+                                    if cell_health[idx] == Health::S
+                                        && infection_distro.sample(&mut rng)
+                                    {
+                                        // Agent infects cell
+                                        next_cell_health[idx] = Health::I;
+                                    }
+                                }
+                                if recovery_distro.sample(&mut rng) {
+                                    next_health.insert(k, Health::S);
+                                }
+                            }
+                        };
+                    });
+                    // Dynamics: Disease spreads across cells and infectious cells recover
+                    #[cfg(feature = "landscape")]
+                    coord.for_each8(|this_cell_index, neighbors| {
+                        match cell_health[this_cell_index] {
+                            Health::S => {
+                                for neighbor_index in neighbors {
+                                    if cell_health[*neighbor_index] == Health::I
+                                        && infection_distro.sample(&mut rng)
+                                    {
+                                        next_cell_health[this_cell_index] = Health::I;
+                                        break;
+                                    }
+                                }
+                            }
+                            Health::I => {
+                                if recovery_distro.sample(&mut rng) {
+                                    next_cell_health[this_cell_index] = Health::S;
+                                }
+                            }
+                        }
+                    });
+                    // Dynamics: After spreading the infection, some infectious agents die
+                    health.retain(|_agent_key, h| match h {
+                        Health::S => true,
+                        Health::I => survival_distro.sample(&mut rng),
+                    });
+                    // Dynamics: Remaining agents update in parallel
+                    next_health.iter().for_each(|(k, &next_h)| {
+                        if let Some(h) = health.get_mut(k) {
+                            *h = next_h;
+                        }
+                    });
+                    // Dynamics: cells update in parallel
+                    #[cfg(feature = "landscape")]
+                    {
+                        cell_health = next_cell_health.clone();
+                    }
+                }
+                // Dynamics: Prune network
+                #[cfg(feature = "net")]
+                links.retain(|_link_key, (key0, key1)| {
+                    health.contains_key(*key0) && health.contains_key(*key1)
                 });
-                // Dynamics: cells update in parallel
-                #[cfg(feature = "landscape")]
-                {
-                    cell_health = next_cell_health.clone();
+                // Dynamics: New agents emerge
+                let nb = health
+                    .values()
+                    .filter(|&&h| h == Health::S && birth_distro.sample(&mut rng))
+                    .count();
+                for _ in 0..nb {
+                    health.insert(Health::S);
                 }
             }
-            // Dynamics: Prune network
-            #[cfg(feature = "net")]
-            links.retain(|_link_key, (key0, key1)| {
-                health.contains_key(*key0) && health.contains_key(*key1)
-            });
-            // Dynamics: New agents emerge
-            let nb = health
-                .values()
-                .filter(|&&h| h == Health::S && birth_distro.sample(&mut rng))
-                .count();
-            for _ in 0..nb {
-                health.insert(Health::S);
-            }
-        }
-    });
-    eprint!("\r                                                                         \rSimulation complete. Saving to disk... ");
+        });
+    eprint!("{}Simulation complete. Saving to disk... ", clean_term);
     #[cfg(feature = "graphics")]
     let mut agent_time_series_height = 0;
     #[cfg(feature = "landscape-graphics")]
@@ -513,7 +530,7 @@ fn main() {
             }
         }
     });
-    eprintln!("\r                                                                         \rTime series saved to {}.", ts_name);
+    eprintln!("{}Time series saved to {}.", clean_term, ts_name);
     #[cfg(feature = "graphics")]
     {
         #[cfg(feature = "net-graphics")]
@@ -556,238 +573,357 @@ fn main() {
         let x_label_offset = 1;
         let y_label_area_size = 60;
         scenarios.iter().for_each(|scenario| {
-                eprint!("\r                                                                         \rCreating figures for scenario {}/{}... ", scenario.id, scenarios.len());
-                let figure_scenario_counter = scenario.id * time_series_len as u32;
-                scenario
-                    .time_series
-                    .par_iter()
-                    .for_each(|time_step_results| {
-                        let file_number = figure_scenario_counter + time_step_results.time_step + 1;
-                        for &dark_figures in &[false, true] {
-                            let figure_prefix = "img";
-                            let figure_file_name = format!("{}{}/{}.png",
+            eprint!(
+                "{}Creating figures for scenario {}/{}... ",
+                clean_term,
+                scenario.id,
+                scenarios.len()
+            );
+            let figure_scenario_counter = scenario.id * time_series_len as u32;
+            scenario
+                .time_series
+                .par_iter()
+                .for_each(|time_step_results| {
+                    let file_number = figure_scenario_counter + time_step_results.time_step + 1;
+                    for &dark_figures in &[false, true] {
+                        let figure_prefix = "img";
+                        let figure_file_name = format!(
+                            "{}{}/{}.png",
                             figure_prefix,
                             if dark_figures { "_dark" } else { "" },
                             file_number
+                        );
+                        let figure_path = std::path::Path::new(&figure_file_name);
+                        if figure_path.exists() {
+                            panic!(
+                                "This program just tried to rewrite {}; please debug",
+                                figure_path.to_str().unwrap()
                             );
-                            let figure_path = std::path::Path::new(&figure_file_name);
-                            if figure_path.exists() {
-                                panic!("This program just tried to rewrite {}; please debug", figure_path.to_str().unwrap());
-                            }
-                            let drawing_area =
-                                BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
-                            let background_color = if dark_figures { &BLACK } else { &WHITE };
-                            let _transparent_color = background_color.mix(0.);
-                            let color0 = if dark_figures { &WHITE } else { &BLACK };
-                            let color1 = color0.mix(0.2);
-                            let color2 = color0.mix(0.1);
-                            let color3 = if dark_figures { &plotters::style::RGBColor(255, 192, 0) } else { &RED };
-                            let color4 = &plotters::style::RGBColor(0, 176, 80);
-                            let color5 = &plotters::style::RGBColor(32, 56, 100);
-                            let color_s = color4;
-                            let color_i = color5;
-                            let _fill0 = color0.filled();
-                            let fill1 = color1.filled();
-                            let _fill2 = color2.filled();
-                            let _fill3 = color3.filled();
-                            let text_color0 = |text_size| ("Calibri", text_size).into_font().color(color0);
-                            drawing_area.fill(background_color).unwrap();
-                            let (left_area, right_area) = drawing_area.split_horizontally(1920 - 1080);
-                            let left_panels = left_area.split_evenly((4, 1));
-                            left_panels[0].draw_text(&format!("infection_probability = {}", scenario.infection_probability), &text_color0(text_size0), (50, 10)).unwrap();
-                            #[cfg(feature = "net-graphics")]
-                            {
-                                left_panels[0].draw_text(&format!("d_s Max degree of susceptibles: {}", time_step_results.d_s), &text_color0(text_size0), (50, 100)).unwrap();
-                                left_panels[0].draw_text(&format!("d_i Max degree of infectious agents: {}", time_step_results.d_i), &text_color0(text_size0), (50, 140)).unwrap();
-                            }
-                            left_panels[0].draw_text(&format!("time: {}", time_step_results.time_step), &text_color0(text_size0), (500, 10)).unwrap();
-                            #[cfg(feature = "net-graphics")]
-                            {
-                                let x_range = if compress_histogram {
-                                    0..x_degree.len() as i32
+                        }
+                        let drawing_area =
+                            BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
+                        let background_color = if dark_figures { &BLACK } else { &WHITE };
+                        let _transparent_color = background_color.mix(0.);
+                        let color0 = if dark_figures { &WHITE } else { &BLACK };
+                        let color1 = color0.mix(0.2);
+                        let color2 = color0.mix(0.1);
+                        let color3 = if dark_figures {
+                            &plotters::style::RGBColor(255, 192, 0)
+                        } else {
+                            &RED
+                        };
+                        let color4 = &plotters::style::RGBColor(0, 176, 80);
+                        let color5 = &plotters::style::RGBColor(32, 56, 100);
+                        let color_s = color4;
+                        let color_i = color5;
+                        let _fill0 = color0.filled();
+                        let fill1 = color1.filled();
+                        let _fill2 = color2.filled();
+                        let _fill3 = color3.filled();
+                        let text_color0 =
+                            |text_size| ("Calibri", text_size).into_font().color(color0);
+                        drawing_area.fill(background_color).unwrap();
+                        let (left_area, right_area) = drawing_area.split_horizontally(1920 - 1080);
+                        let left_panels = left_area.split_evenly((4, 1));
+                        left_panels[0]
+                            .draw_text(
+                                &format!(
+                                    "infection_probability = {}",
+                                    scenario.infection_probability
+                                ),
+                                &text_color0(text_size0),
+                                (50, 10),
+                            )
+                            .unwrap();
+                        #[cfg(feature = "net-graphics")]
+                        {
+                            left_panels[0]
+                                .draw_text(
+                                    &format!(
+                                        "d_s Max degree of susceptibles: {}",
+                                        time_step_results.d_s
+                                    ),
+                                    &text_color0(text_size0),
+                                    (50, 100),
+                                )
+                                .unwrap();
+                            left_panels[0]
+                                .draw_text(
+                                    &format!(
+                                        "d_i Max degree of infectious agents: {}",
+                                        time_step_results.d_i
+                                    ),
+                                    &text_color0(text_size0),
+                                    (50, 140),
+                                )
+                                .unwrap();
+                        }
+                        left_panels[0]
+                            .draw_text(
+                                &format!("time: {}", time_step_results.time_step),
+                                &text_color0(text_size0),
+                                (500, 10),
+                            )
+                            .unwrap();
+                        #[cfg(feature = "net-graphics")]
+                        {
+                            let x_range = if compress_histogram {
+                                0..x_degree.len() as i32
+                            } else {
+                                0..histogram_max_degree
+                            };
+                            let mut chart = ChartBuilder::on(&left_panels[1])
+                                .x_label_area_size(x_label_area_size)
+                                .y_label_area_size(y_label_area_size)
+                                .margin(figure_margin)
+                                .caption("Network degree of agents", text_color0(text_size0))
+                                .build_ranged(x_range, 0..histogram_height)
+                                .unwrap();
+                            chart
+                                .configure_mesh()
+                                .line_style_1(&color1)
+                                .line_style_2(&color2)
+                                .y_desc("Number of agents")
+                                .x_desc(if compress_histogram {
+                                    "Network degree (removing zeroes)"
                                 } else {
-                                    0..histogram_max_degree
-                                };
-                                let mut chart = ChartBuilder::on(&left_panels[1])
-                                    .x_label_area_size(x_label_area_size)
-                                    .y_label_area_size(y_label_area_size)
-                                    .margin(figure_margin)
-                                    .caption("Network degree of agents", text_color0(text_size0))
-                                    .build_ranged(x_range, 0..histogram_height)
-                                    .unwrap();
-                                chart
-                                    .configure_mesh()
-                                    .line_style_1(&color1)
-                                    .line_style_2(&color2)
-                                    .y_desc("Number of agents")
-                                    .x_desc(if compress_histogram {"Network degree (removing zeroes)"} else {"Network degree"})
-                                    .axis_style(color0)
-                                    .axis_desc_style(text_color0(text_size1))
-                                    .label_style(text_color0(text_size1))
-                                    .x_label_offset(x_label_offset)
-                                    .x_label_formatter(&|x_position| {
-                                        if compress_histogram {
-                                            match x_degree.get(*x_position as usize) {
-                                                Some(x_deg) => format!("{}", x_deg.1),
-                                                None => format!(""),
-                                            }
-                                        } else {
-                                            format!("{}", x_position)
+                                    "Network degree"
+                                })
+                                .axis_style(color0)
+                                .axis_desc_style(text_color0(text_size1))
+                                .label_style(text_color0(text_size1))
+                                .x_label_offset(x_label_offset)
+                                .x_label_formatter(&|x_position| {
+                                    if compress_histogram {
+                                        match x_degree.get(*x_position as usize) {
+                                            Some(x_deg) => format!("{}", x_deg.1),
+                                            None => format!(""),
                                         }
-                                    })
-                                    .draw()
-                                    .unwrap();
-                                chart
-                                    .draw_series(
-                                        Histogram::vertical(&chart)
-                                            .style(background_color.filled())
-                                            .margin(bar_margin)
-                                            .data(time_step_results.degree_histogram.iter().map(
-                                                |(degree, weight)| {
-                                                    (
-                                                        if compress_histogram {
-                                                            x_degree
-                                                                .iter()
-                                                                .find(|&(_, &deg)| deg == degree)
-                                                                .unwrap()
-                                                                .0
-                                                                as i32
-                                                        } else {
-                                                            *degree
-                                                        },
-                                                        *weight,
-                                                    )
-                                                },
-                                            )),
+                                    } else {
+                                        format!("{}", x_position)
+                                    }
+                                })
+                                .draw()
+                                .unwrap();
+                            chart
+                                .draw_series(
+                                    Histogram::vertical(&chart)
+                                        .style(background_color.filled())
+                                        .margin(bar_margin)
+                                        .data(time_step_results.degree_histogram.iter().map(
+                                            |(degree, weight)| {
+                                                (
+                                                    if compress_histogram {
+                                                        x_degree
+                                                            .iter()
+                                                            .find(|&(_, &deg)| deg == degree)
+                                                            .unwrap()
+                                                            .0
+                                                            as i32
+                                                    } else {
+                                                        *degree
+                                                    },
+                                                    *weight,
+                                                )
+                                            },
+                                        )),
+                                )
+                                .unwrap();
+                            chart
+                                .draw_series(
+                                    Histogram::vertical(&chart)
+                                        .style(color0)
+                                        .margin(bar_margin)
+                                        .data(time_step_results.degree_histogram.iter().map(
+                                            |(degree, weight)| {
+                                                (
+                                                    if compress_histogram {
+                                                        x_degree
+                                                            .iter()
+                                                            .find(|&(_, &deg)| deg == degree)
+                                                            .unwrap()
+                                                            .0
+                                                            as i32
+                                                    } else {
+                                                        *degree
+                                                    },
+                                                    *weight,
+                                                )
+                                            },
+                                        )),
+                                )
+                                .unwrap();
+                        }
+                        {
+                            let mut chart = ChartBuilder::on(&left_panels[2])
+                                .x_label_area_size(x_label_area_size)
+                                .y_label_area_size(y_label_area_size)
+                                .margin(figure_margin)
+                                .caption("Populations of agents", text_color0(text_size0))
+                                .build_ranged(
+                                    0..(time_series_len as u32),
+                                    0..agent_time_series_height,
+                                )
+                                .unwrap();
+                            chart
+                                .configure_mesh()
+                                .line_style_1(&color1)
+                                .line_style_2(&color2)
+                                .y_desc("Number of agents")
+                                .x_desc("Time")
+                                .axis_style(color0)
+                                .axis_desc_style(text_color0(text_size1))
+                                .label_style(text_color0(text_size1))
+                                .draw()
+                                .unwrap();
+                            chart
+                                .draw_series(LineSeries::new(
+                                    scenario
+                                        .time_series
+                                        .iter()
+                                        .skip_while(|tsr| {
+                                            tsr.time_step < time_step_results.time_step
+                                        })
+                                        .map(|time_step_results| {
+                                            (time_step_results.time_step, time_step_results.n)
+                                        }),
+                                    fill1,
+                                ))
+                                .unwrap();
+                            chart
+                                .draw_series(LineSeries::new(
+                                    scenario
+                                        .time_series
+                                        .iter()
+                                        .take_while(|tsr| {
+                                            tsr.time_step <= time_step_results.time_step
+                                        })
+                                        .map(|time_step_results| {
+                                            (time_step_results.time_step, time_step_results.n)
+                                        }),
+                                    color1.stroke_width(thick_stroke),
+                                ))
+                                .unwrap()
+                                .label("n Number of agents")
+                                .legend(|(x, y)| {
+                                    PathElement::new(
+                                        vec![(x, y), (x + 20, y)],
+                                        color1.stroke_width(thick_stroke),
                                     )
-                                    .unwrap();
-                                chart
-                                    .draw_series(
-                                        Histogram::vertical(&chart)
-                                            .style(color0)
-                                            .margin(bar_margin)
-                                            .data(time_step_results.degree_histogram.iter().map(
-                                                |(degree, weight)| {
-                                                    (
-                                                        if compress_histogram {
-                                                            x_degree
-                                                                .iter()
-                                                                .find(|&(_, &deg)| deg == degree)
-                                                                .unwrap()
-                                                                .0
-                                                                as i32
-                                                        } else {
-                                                            *degree
-                                                        },
-                                                        *weight,
-                                                    )
-                                                },
-                                            )),
+                                });
+                            chart
+                                .draw_series(LineSeries::new(
+                                    scenario
+                                        .time_series
+                                        .iter()
+                                        .skip_while(|tsr| {
+                                            tsr.time_step < time_step_results.time_step
+                                        })
+                                        .map(|time_step_results| {
+                                            (time_step_results.time_step, time_step_results.i)
+                                        }),
+                                    color_i,
+                                ))
+                                .unwrap();
+                            chart
+                                .draw_series(LineSeries::new(
+                                    scenario
+                                        .time_series
+                                        .iter()
+                                        .take_while(|tsr| {
+                                            tsr.time_step <= time_step_results.time_step
+                                        })
+                                        .map(|time_step_results| {
+                                            (time_step_results.time_step, time_step_results.i)
+                                        }),
+                                    color_i.stroke_width(thick_stroke),
+                                ))
+                                .unwrap()
+                                .label("i Infected agents")
+                                .legend(|(x, y)| {
+                                    PathElement::new(
+                                        vec![(x, y), (x + 20, y)],
+                                        color_i.stroke_width(thick_stroke),
                                     )
-                                    .unwrap();
-                            }
-                            {
-                                let mut chart = ChartBuilder::on(&left_panels[2])
-                                    .x_label_area_size(x_label_area_size)
-                                    .y_label_area_size(y_label_area_size)
-                                    .margin(figure_margin)
-                                    .caption("Populations of agents", text_color0(text_size0))
-                                    .build_ranged(0..(time_series_len as u32), 0..agent_time_series_height)
-                                    .unwrap();
-                                chart
-                                    .configure_mesh()
-                                    .line_style_1(&color1)
-                                    .line_style_2(&color2)
-                                    .y_desc("Number of agents")
-                                    .x_desc("Time")
-                                    .axis_style(color0)
-                                    .axis_desc_style(text_color0(text_size1))
-                                    .label_style(text_color0(text_size1))
-                                    .draw()
-                                    .unwrap();
-                                chart.draw_series(LineSeries::new(
-                                    scenario.time_series.iter()
-                                    .skip_while(|tsr| tsr.time_step < time_step_results.time_step)
-                                    .map(|time_step_results| (time_step_results.time_step, time_step_results.n)),
-                                    fill1
-                                    ))
-                                    .unwrap();
-                                chart.draw_series(LineSeries::new(
-                                    scenario.time_series.iter()
-                                    .take_while(|tsr| tsr.time_step <= time_step_results.time_step)
-                                    .map(|time_step_results| (time_step_results.time_step, time_step_results.n)),
-                                    color1.stroke_width(thick_stroke)
-                                ))
-                                .unwrap().label("n Number of agents").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color1.stroke_width(thick_stroke)));
-                                chart.draw_series(LineSeries::new(
-                                    scenario.time_series.iter()
-                                    .skip_while(|tsr| tsr.time_step < time_step_results.time_step)
-                                    .map(|time_step_results| (time_step_results.time_step, time_step_results.i)),
-                                    color_i
+                                });
+                            chart
+                                .configure_series_labels()
+                                .label_font(text_color0(text_size1))
+                                .border_style(color0)
+                                .draw()
+                                .unwrap();
+                        }
+                        #[cfg(feature = "landscape")]
+                        {
+                            let mut chart = ChartBuilder::on(&left_panels[3])
+                                .x_label_area_size(x_label_area_size)
+                                .y_label_area_size(y_label_area_size)
+                                .margin(figure_margin)
+                                .caption("Infection of cells", text_color0(text_size0))
+                                .build_ranged(
+                                    0..(time_series_len as u32),
+                                    0..cell_time_series_height,
+                                )
+                                .unwrap();
+                            chart
+                                .configure_mesh()
+                                .line_style_2(&no_color)
+                                .y_desc("Number of infected cells")
+                                .x_desc("Time")
+                                .axis_style(color0)
+                                .axis_desc_style(text_color0(text_size1))
+                                .label_style(text_color0(text_size1))
+                                .draw()
+                                .unwrap();
+                            chart
+                                .draw_series(LineSeries::new(
+                                    scenario
+                                        .time_series
+                                        .iter()
+                                        .skip_while(|tsr| {
+                                            tsr.time_step < time_step_results.time_step
+                                        })
+                                        .map(|time_step_results| {
+                                            (time_step_results.time_step, time_step_results.c_i)
+                                        }),
+                                    color_i,
                                 ))
                                 .unwrap();
-                                chart.draw_series(LineSeries::new(
-                                    scenario.time_series.iter()
-                                    .take_while(|tsr| tsr.time_step <= time_step_results.time_step)
-                                    .map(|time_step_results| (time_step_results.time_step, time_step_results.i)),
-                                    color_i.stroke_width(thick_stroke)
-                                ))
-                                .unwrap().label("i Infected agents").legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], color_i.stroke_width(thick_stroke)));
-                                chart.configure_series_labels()
-                                    .label_font(text_color0(text_size1))
-                                    .border_style(color0)
-                                    .draw()
-                                    .unwrap();
-                            }
-                            #[cfg(feature = "landscape")]
-                            {
-                                let mut chart = ChartBuilder::on(&left_panels[3])
-                                    .x_label_area_size(x_label_area_size)
-                                    .y_label_area_size(y_label_area_size)
-                                    .margin(figure_margin)
-                                    .caption("Infection of cells", text_color0(text_size0))
-                                    .build_ranged(0..(time_series_len as u32), 0..cell_time_series_height)
-                                    .unwrap();
-                                chart
-                                    .configure_mesh()
-                                    .line_style_2(&no_color)
-                                    .y_desc("Number of infected cells")
-                                    .x_desc("Time")
-                                    .axis_style(color0)
-                                    .axis_desc_style(text_color0(text_size1))
-                                    .label_style(text_color0(text_size1))
-                                    .draw()
-                                    .unwrap();
-                                chart.draw_series(LineSeries::new(
-                                    scenario.time_series.iter()
-                                    .skip_while(|tsr| tsr.time_step < time_step_results.time_step)
-                                    .map(|time_step_results| (time_step_results.time_step, time_step_results.c_i)),
-                                    color_i
+                            chart
+                                .draw_series(LineSeries::new(
+                                    scenario
+                                        .time_series
+                                        .iter()
+                                        .take_while(|tsr| {
+                                            tsr.time_step <= time_step_results.time_step
+                                        })
+                                        .map(|time_step_results| {
+                                            (time_step_results.time_step, time_step_results.c_i)
+                                        }),
+                                    color_i.stroke_width(thick_stroke),
                                 ))
                                 .unwrap();
-                                chart.draw_series(LineSeries::new(
-                                    scenario.time_series.iter()
-                                    .take_while(|tsr| tsr.time_step <= time_step_results.time_step)
-                                    .map(|time_step_results| (time_step_results.time_step, time_step_results.c_i)),
-                                    color_i.stroke_width(thick_stroke)
-                                ))
-                                .unwrap();
-                            }
-                            #[cfg(feature = "landscape")]
-                            {
-                                let landscape = right_area.margin(10, 10, 10, 10);
-                                let cells = landscape.split_evenly((coord.height() as usize, coord.width() as usize));
-                                cells.iter().zip(time_step_results.cell_health.iter()).for_each(|(cell, health)| {
+                        }
+                        #[cfg(feature = "landscape")]
+                        {
+                            let landscape = right_area.margin(10, 10, 10, 10);
+                            let cells = landscape
+                                .split_evenly((coord.height() as usize, coord.width() as usize));
+                            cells
+                                .iter()
+                                .zip(time_step_results.cell_health.iter())
+                                .for_each(|(cell, health)| {
                                     cell.fill(match health {
                                         Health::S => color_s,
                                         Health::I => color_i,
-                                    }).unwrap();
+                                    })
+                                    .unwrap();
                                 });
-                            }
                         }
-                    });
-            });
+                    }
+                });
+        });
     }
     #[cfg(feature = "graphics")]
-    eprintln!("\r                                                                         \rFigures saved to the img and img_dark directories.\nFeel free to use the ./create_movie.sh script to produce a video.\nMove important output files to a safe place.\nLeftover files will be removed next time you run this program.");
+    eprintln!("Figures saved to the img and img_dark directories.\nFeel free to use the ./create_movie.sh script to produce a video.\nMove important output files to a safe place.\nLeftover files will be removed next time you run this program.");
 }
