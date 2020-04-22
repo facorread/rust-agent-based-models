@@ -923,7 +923,31 @@ fn main() {
                     }
                 });
         });
+        eprint!("{}Figures saved to the img and img_dark directories.\nWriting video.mkv; open log file video.log to follow progress.", clean_term);
+        // Debug levels for the "level" variable: warning 24, info 32, verbose 40
+        match std::process::Command::new("ffmpeg")
+            .env("FFREPORT", "file=video.log:level=32")
+            .args(&[
+                "-r",
+                "20",
+                "-i",
+                "img_dark/%d.png",
+                "-loglevel",
+                "warning",
+                "-hide_banner",
+                "video_dark.mkv",
+            ])
+            .status()
+        {
+            Ok(ffmpeg_status) => eprintln!(
+                "{}Created video.mkv; {}. Learn more by reviewing video.log.",
+                clean_term, ffmpeg_status
+            ),
+            Err(e) => eprintln!(
+                "{}Could not create video.mkv: {}.\nPlease review file video.log, if it exists, to learn more.",
+                clean_term, e
+            ),
+        }
+        eprintln!("Move important output files to a safe place.\nLeftover files will be removed next time you run this program.");
     }
-    #[cfg(feature = "graphics")]
-    eprintln!("Figures saved to the img and img_dark directories.\nFeel free to use the ./create_movie.sh script to produce a video.\nMove important output files to a safe place.\nLeftover files will be removed next time you run this program.");
 }
