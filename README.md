@@ -19,15 +19,15 @@ After you have used popular frameworks to prototype your ABM, consider using Rus
 
 ## Getting started
 
-Use your favorite terminal to run `cargo run --release`.
+Install [Rust], [Visual Studio Code], the [Better TOML extension], the [Rust (rls) extension], the [Rust Clippy tool], and the [FFmpeg]. Installation of these packages should be straightforward.
+
+[Clone] this repository (`https://github.com/facorread/rust-agent-based-models.git`) and use your favorite terminal to run `cargo run --release`.
 
 The code is an exaggerated example of an infectious model; it implements an infectious disease transmitting between agents, between agents and cells, and across cells.
 
 See an [example video here](https://youtu.be/oYeHyFl1-HY)
 
 ## What can I do with this software?
-
-Install [Rust], [Visual Studio Code], the [Better TOML extension], the [Rust (rls) extension], and the [Rust Clippy tool] for model development. Installation of these packages should be straightforward.
 
 Ideally you would fork this repository to build your own model; this would give you easy access to bug fixes and enhancements via `git pull` and `git merge`. As an alternative, you can just copy this code and start an ABM in your own repository. Finally, you can implement the ideas in this repository as part of your own design.
 
@@ -93,6 +93,8 @@ Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019
 
 [Better TOML extension]:https://marketplace.visualstudio.com/items?itemName=bungcip.better-toml
 [Cargo's features]:https://doc.rust-lang.org/cargo/reference/features.html
+[Clone]:https://code.visualstudio.com/docs/editor/versioncontrol#_cloning-a-repository
+[FFmpeg]:https://www.ffmpeg.org/download.html
 [`plotters`]:https://crates.io/crates/plotters
 [`rayon`]:https://github.com/rayon-rs/rayon
 [Rust]:https://www.rust-lang.org
