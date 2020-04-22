@@ -19,7 +19,7 @@ After you have used popular frameworks to prototype your ABM, consider using Rus
 
 ## Getting started
 
-Install [Rust], [Visual Studio Code], the [Better TOML extension], the [Rust (rls) extension], the [Rust Clippy tool], and the [FFmpeg]. Installation of these packages should be straightforward.
+Install [Rust], [Visual Studio Code], the [Better TOML extension], the [Rust (rls) extension], the [Rust Clippy tool], and the [FFmpeg] binaries for your operating system. Installation of these packages should be straightforward.
 
 [Clone] this repository (`https://github.com/facorread/rust-agent-based-models.git`) and use your favorite terminal to run `cargo run --release`.
 
