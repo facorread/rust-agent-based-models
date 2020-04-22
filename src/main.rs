@@ -111,7 +111,11 @@ fn main() {
             if let Ok(entry) = res {
                 let path = entry.path();
                 if let Some(extension) = path.extension() {
-                    if extension == "csv" || extension == "png" || extension == "mkv" {
+                    if extension == "csv"
+                        || extension == "log"
+                        || extension == "mkv"
+                        || extension == "png"
+                    {
                         if let Some(file_name_os_str) = path.file_name() {
                             if let Some(file_name) = file_name_os_str.to_str() {
                                 if let Err(e) = fs::remove_file(path.clone()) {
