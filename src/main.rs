@@ -105,6 +105,28 @@ fn main() {
     #[cfg(debug_assertions)] // Only when debugging should this instruction happen.
     #[rustfmt::skip] // Prevent rustfmt (and thus vscode) from splitting this long line.
     rayon::ThreadPoolBuilder::new().num_threads(1).build_global().unwrap();
+    // Delete any png, csv, and mkv leftover files from previous simulations.
+    for dir in &[".", "img", "img_dark"] {
+        for res in std::fs::read_dir(dir).unwrap() {
+            if let Ok(entry) = res {
+                let path = entry.path();
+                if let Some(extension) = path.extension() {
+                    if extension == "csv" || extension == "png" || extension == "mkv" {
+                        if let Some(file_name_os_str) = path.file_name() {
+                            if let Some(file_name) = file_name_os_str.to_str() {
+                                if let Err(e) = fs::remove_file(path.clone()) {
+                                    panic!(
+                                        "Could not remove file {} from a previous simulation: {}",
+                                        file_name, e
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     // Model parameter: Initial number of agents
     let n0: usize = 1000;
     // Model parameter: Scale-free network parameter: new links per agent
@@ -424,8 +446,16 @@ fn main() {
     let mut histogram_max_degree = 0;
     #[cfg(feature = "net-graphics")]
     let mut histogram_height = 0;
-    let ts_err = "Error writing time series output file";
-    let mut ts_file = fs::File::create("ts.csv").expect(ts_err);
+    let ts_name = "ts.csv";
+    let ts_err = &*format!("Error writing time series output file {}", ts_name);
+    let ts_path = std::path::Path::new(ts_name);
+    if ts_path.exists() {
+        panic!(
+            "This program just tried to rewrite {}; please debug",
+            ts_name
+        );
+    }
+    let mut ts_file = fs::File::create(ts_path).expect(ts_err);
     write!(&mut ts_file, "Infection Probability").expect(ts_err);
     write!(&mut ts_file, ",Time step").expect(ts_err);
     #[cfg(feature = "net")]
@@ -479,6 +509,7 @@ fn main() {
             }
         }
     });
+    eprintln!("\r                                                                         \rTime series saved to {}.", ts_name);
     #[cfg(feature = "graphics")]
     {
         #[cfg(feature = "net-graphics")]
@@ -521,7 +552,7 @@ fn main() {
         let x_label_offset = 1;
         let y_label_area_size = 60;
         scenarios.iter().for_each(|scenario| {
-                eprint!("\r                                                                         \rSimulation complete. Creating figures for scenario {}/{}... ", scenario.id, scenarios.len());
+                eprint!("\r                                                                         \rCreating figures for scenario {}/{}... ", scenario.id, scenarios.len());
                 let figure_scenario_counter = scenario.id * time_series_len as u32;
                 scenario
                     .time_series
@@ -537,7 +568,7 @@ fn main() {
                             );
                             let figure_path = std::path::Path::new(&figure_file_name);
                             if figure_path.exists() {
-                                panic!("File {} already exists. Make sure the {} folders are clean before running this program. If they were clean, then this program is overwriting its own figures. Please review.", figure_path.to_str().unwrap(), figure_prefix);
+                                panic!("This program just tried to rewrite {}; please debug", figure_path.to_str().unwrap());
                             }
                             let drawing_area =
                                 BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
@@ -753,5 +784,6 @@ fn main() {
                     });
             });
     }
-    eprintln!("\r                                                                         \nSimulation is complete.");
+    #[cfg(feature = "graphics")]
+    eprintln!("\r                                                                         \rFigures saved to the img and img_dark directories.\nFeel free to use the ./create_movie.sh script to produce a video.\nMove important output files to a safe place.\nLeftover files will be removed next time you run this program.");
 }

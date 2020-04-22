@@ -17,6 +17,14 @@ Agent-based models (ABM) are computational tools of complexity science and compl
 
 After you have used popular frameworks to prototype your ABM, consider using Rust over C or C++ to implement the high-performance version of your ABM.
 
+## Getting started
+
+Use your favorite terminal to run `cargo run --release`.
+
+The code is an exaggerated example of an infectious model; it implements an infectious disease transmitting between agents, between agents and cells, and across cells.
+
+See an [example video here](https://youtu.be/oYeHyFl1-HY)
+
 ## What can I do with this software?
 
 Install [Rust], [Visual Studio Code], the [Better TOML extension], the [Rust (rls) extension], and the [Rust Clippy tool] for model development. Installation of these packages should be straightforward.

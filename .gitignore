@@ -1,8 +1,6 @@
 ~$*
 *~
 /target
-/img
-/img_dark
 **/*.rs.bk
 Cargo.lock
 *.csv
