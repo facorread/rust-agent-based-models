@@ -611,6 +611,12 @@ fn main() {
                         let color3 = &plotters::style::RGBColor(32, 56, 100);
                         let color_s = color2;
                         let color_i = color3;
+                        let color0t = color0.stroke_width(thick_stroke);
+                        let color1t = color1.stroke_width(thick_stroke);
+                        let color2t = color2.stroke_width(thick_stroke);
+                        let color3t = color3.stroke_width(thick_stroke);
+                        let color_st = color2t;
+                        let color_it = color3t;
                         let fill0 = color0.filled();
                         let fill01 = color01.filled();
                         let fill02 = color02.filled();
@@ -798,15 +804,12 @@ fn main() {
                                         .map(|time_step_results| {
                                             (time_step_results.time_step, time_step_results.n)
                                         }),
-                                    color0.stroke_width(thick_stroke),
+                                    color0t.clone(),
                                 ))
                                 .unwrap()
                                 .label("n Number of agents")
                                 .legend(|(x, y)| {
-                                    PathElement::new(
-                                        vec![(x, y), (x + 20, y)],
-                                        color0.stroke_width(thick_stroke),
-                                    )
+                                    PathElement::new(vec![(x, y), (x + 20, y)], color0t.clone())
                                 });
                             chart
                                 .draw_series(LineSeries::new(
@@ -833,15 +836,12 @@ fn main() {
                                         .map(|time_step_results| {
                                             (time_step_results.time_step, time_step_results.i)
                                         }),
-                                    color_i.stroke_width(thick_stroke),
+                                    color_it.clone(),
                                 ))
                                 .unwrap()
                                 .label("i Infected agents")
                                 .legend(|(x, y)| {
-                                    PathElement::new(
-                                        vec![(x, y), (x + 20, y)],
-                                        color_i.stroke_width(thick_stroke),
-                                    )
+                                    PathElement::new(vec![(x, y), (x + 20, y)], color_it.clone())
                                 });
                             chart
                                 .configure_series_labels()
@@ -898,7 +898,7 @@ fn main() {
                                         .map(|time_step_results| {
                                             (time_step_results.time_step, time_step_results.c_i)
                                         }),
-                                    color_i.stroke_width(thick_stroke),
+                                    color_it,
                                 ))
                                 .unwrap();
                         }
