@@ -105,7 +105,7 @@ fn main() {
     #[cfg(debug_assertions)] // Only when debugging should this instruction happen.
     #[rustfmt::skip] // Prevent rustfmt (and thus vscode) from splitting this long line.
     rayon::ThreadPoolBuilder::new().num_threads(1).build_global().unwrap();
-    // Delete any png, csv, and mkv leftover files from previous simulations.
+    // Delete any png, csv, and mkv files from previous simulations.
     for dir in &[".", "img", "img_dark"] {
         for res in std::fs::read_dir(dir).unwrap() {
             if let Ok(entry) = res {
@@ -557,12 +557,6 @@ fn main() {
         }
         #[cfg(feature = "net-graphics")]
         let x_degree: std::vec::Vec<_> = histogram_degrees_set.iter().enumerate().collect();
-        let no_color = plotters::style::RGBColor(0, 0, 0).mix(0.0);
-        let _no_style = ShapeStyle {
-            color: no_color.clone(),
-            filled: false,
-            stroke_width: 0,
-        };
         let figure_margin = 5;
         #[cfg(feature = "net-graphics")]
         let bar_margin = 3;
@@ -604,25 +598,27 @@ fn main() {
                         let drawing_area =
                             BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
                         let background_color = if dark_figures { &BLACK } else { &WHITE };
-                        let _transparent_color = background_color.mix(0.);
+                        let transparent_color = background_color.mix(0.);
                         let color0 = if dark_figures { &WHITE } else { &BLACK };
-                        let color1 = color0.mix(0.2);
-                        let color2 = color0.mix(0.1);
-                        let color3 = if dark_figures {
+                        let color01 = color0.mix(0.1);
+                        let color02 = color0.mix(0.2);
+                        let color1 = if dark_figures {
                             &plotters::style::RGBColor(255, 192, 0)
                         } else {
                             &RED
                         };
-                        let color4 = &plotters::style::RGBColor(0, 176, 80);
-                        let color5 = &plotters::style::RGBColor(32, 56, 100);
-                        let color_s = color4;
-                        let color_i = color5;
-                        let _fill0 = color0.filled();
+                        let color2 = &plotters::style::RGBColor(0, 176, 80);
+                        let color3 = &plotters::style::RGBColor(32, 56, 100);
+                        let color_s = color2;
+                        let color_i = color3;
+                        let fill0 = color0.filled();
+                        let fill01 = color01.filled();
+                        let fill02 = color02.filled();
                         let fill1 = color1.filled();
-                        let _fill2 = color2.filled();
-                        let _fill3 = color3.filled();
-                        let text_color0 =
-                            |text_size| ("Calibri", text_size).into_font().color(color0);
+                        let fill2 = color2.filled();
+                        let fill3 = color3.filled();
+                        let text0 = ("Calibri", text_size0).into_font().color(color0);
+                        let text1 = ("Calibri", text_size1).into_font().color(color0);
                         drawing_area.fill(background_color).unwrap();
                         let (left_area, right_area) = drawing_area.split_horizontally(1920 - 1080);
                         let left_panels = left_area.split_evenly((4, 1));
@@ -632,7 +628,7 @@ fn main() {
                                     "infection_probability = {}",
                                     scenario.infection_probability
                                 ),
-                                &text_color0(text_size0),
+                                &text0,
                                 (50, 10),
                             )
                             .unwrap();
@@ -644,7 +640,7 @@ fn main() {
                                         "d_s Max degree of susceptibles: {}",
                                         time_step_results.d_s
                                     ),
-                                    &text_color0(text_size0),
+                                    &text0,
                                     (50, 100),
                                 )
                                 .unwrap();
@@ -654,7 +650,7 @@ fn main() {
                                         "d_i Max degree of infectious agents: {}",
                                         time_step_results.d_i
                                     ),
-                                    &text_color0(text_size0),
+                                    &text0,
                                     (50, 140),
                                 )
                                 .unwrap();
@@ -662,7 +658,7 @@ fn main() {
                         left_panels[0]
                             .draw_text(
                                 &format!("time: {}", time_step_results.time_step),
-                                &text_color0(text_size0),
+                                &text0,
                                 (500, 10),
                             )
                             .unwrap();
@@ -677,13 +673,13 @@ fn main() {
                                 .x_label_area_size(x_label_area_size)
                                 .y_label_area_size(y_label_area_size)
                                 .margin(figure_margin)
-                                .caption("Network degree of agents", text_color0(text_size0))
+                                .caption("Network degree of agents", text0.clone())
                                 .build_ranged(x_range, 0..histogram_height)
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_1(&color1)
-                                .line_style_2(&color2)
+                                .line_style_1(&color02)
+                                .line_style_2(&color01)
                                 .y_desc("Number of agents")
                                 .x_desc(if compress_histogram {
                                     "Network degree (removing zeroes)"
@@ -691,8 +687,8 @@ fn main() {
                                     "Network degree"
                                 })
                                 .axis_style(color0)
-                                .axis_desc_style(text_color0(text_size1))
-                                .label_style(text_color0(text_size1))
+                                .axis_desc_style(text1.clone())
+                                .label_style(text1.clone())
                                 .x_label_offset(x_label_offset)
                                 .x_label_formatter(&|x_position| {
                                     if compress_histogram {
@@ -760,7 +756,7 @@ fn main() {
                                 .x_label_area_size(x_label_area_size)
                                 .y_label_area_size(y_label_area_size)
                                 .margin(figure_margin)
-                                .caption("Populations of agents", text_color0(text_size0))
+                                .caption("Populations of agents", text0.clone())
                                 .build_ranged(
                                     0..(time_series_len as u32),
                                     0..agent_time_series_height,
@@ -768,13 +764,13 @@ fn main() {
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_1(&color1)
-                                .line_style_2(&color2)
+                                .line_style_1(&color02)
+                                .line_style_2(&color01)
                                 .y_desc("Number of agents")
                                 .x_desc("Time")
                                 .axis_style(color0)
-                                .axis_desc_style(text_color0(text_size1))
-                                .label_style(text_color0(text_size1))
+                                .axis_desc_style(text1.clone())
+                                .label_style(text1.clone())
                                 .draw()
                                 .unwrap();
                             chart
@@ -788,7 +784,7 @@ fn main() {
                                         .map(|time_step_results| {
                                             (time_step_results.time_step, time_step_results.n)
                                         }),
-                                    fill1,
+                                    color0,
                                 ))
                                 .unwrap();
                             chart
@@ -802,14 +798,14 @@ fn main() {
                                         .map(|time_step_results| {
                                             (time_step_results.time_step, time_step_results.n)
                                         }),
-                                    color1.stroke_width(thick_stroke),
+                                    color0.stroke_width(thick_stroke),
                                 ))
                                 .unwrap()
                                 .label("n Number of agents")
                                 .legend(|(x, y)| {
                                     PathElement::new(
                                         vec![(x, y), (x + 20, y)],
-                                        color1.stroke_width(thick_stroke),
+                                        color0.stroke_width(thick_stroke),
                                     )
                                 });
                             chart
@@ -849,7 +845,7 @@ fn main() {
                                 });
                             chart
                                 .configure_series_labels()
-                                .label_font(text_color0(text_size1))
+                                .label_font(text1.clone())
                                 .border_style(color0)
                                 .draw()
                                 .unwrap();
@@ -860,7 +856,7 @@ fn main() {
                                 .x_label_area_size(x_label_area_size)
                                 .y_label_area_size(y_label_area_size)
                                 .margin(figure_margin)
-                                .caption("Infection of cells", text_color0(text_size0))
+                                .caption("Infection of cells", text0.clone())
                                 .build_ranged(
                                     0..(time_series_len as u32),
                                     0..cell_time_series_height,
@@ -868,12 +864,13 @@ fn main() {
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_2(&no_color)
+                                .line_style_1(&color02)
+                                .line_style_2(&color01)
                                 .y_desc("Number of infected cells")
                                 .x_desc("Time")
                                 .axis_style(color0)
-                                .axis_desc_style(text_color0(text_size1))
-                                .label_style(text_color0(text_size1))
+                                .axis_desc_style(text1.clone())
+                                .label_style(text1)
                                 .draw()
                                 .unwrap();
                             chart
@@ -949,6 +946,6 @@ fn main() {
                 clean_term, e
             ),
         }
-        eprintln!("Move important output files to a safe place.\nLeftover files will be removed next time you run this program.");
+        eprintln!("Move important output files to a safe location.\nAny csv, png, and mkv files will be removed next time you run this program.");
     }
 }
