@@ -532,6 +532,7 @@ fn main() {
     });
     eprintln!("{}Time series saved to {}.", clean_term, ts_name);
     #[cfg(feature = "graphics")]
+    #[allow(unused_variables)]
     {
         #[cfg(feature = "net-graphics")]
         {
