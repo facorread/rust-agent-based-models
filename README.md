@@ -9,9 +9,9 @@ https://gitlab.com/facorread/rust-agent-based-models
 
 ## What is an agent-based model?
 
-Agent-based models (ABM) are computer programs that define agents, virtual entities that imitate the decision-making processes and interactions of real people, animals, neurons, etc. An ABM can be useful to understand how a flock of birds is a lot more complicated than just an aggregate of individual birds; each virtual bird can have simple behavior such as trying to fly in close proximity to the nearest neighbor; the ABM then shows that this simple behavior generates the complex, adaptive patterns of flight of real flocks. An ABM can also be useful to model economic behavior: in a virtual society, sellers of goods set a price based on limited information they have about the market, and buyers may bargain based on their own limited information about the market. Even with simple rules, an economic ABM can generate complex patterns that can be useful to understand real macroeconomic trends. There is a wide range of scholarly literature exploring collective behavior of humans, animals, companies, and other complex systems on many scales, from individual to global. There is also a wide range of computer games that are agent-based models.
+Agent-based models (ABM) are computer programs that define agents, virtual entities that imitate the decision-making processes and interactions of real people, animals, neurons, etc. An ABM can be useful to understand how a flock of birds is a lot more complicated than just an aggregate of individual birds; each virtual bird can have simple behavior such as trying to fly in close proximity to the nearest neighbor; the ABM then shows that this simple behavior generates the complex, adaptive patterns of flight of real flocks. An ABM can also be useful to model economic behavior: in a virtual society, sellers of goods set a price based on limited information they have about the market, and buyers may bargain based on their own limited information about the market. Even with simple rules, an economic ABM can generate complex patterns that can be useful to understand real macroeconomic trends.
 
-ABMs are computational tools of complexity science; they are particularly useful to understand complex adaptive systems. ABMs help social and ecological scientists test hypotheses about human behavior by building artificial societies and virtual human-natural systems. Numerous software suites exist to develop ABMs.
+ABMs are computational tools of complexity science. There is a wide range of scholarly literature using ABMs to explore collective behavior of humans, animals, companies, and other complex systems on many scales, from individual to global. ABMs are particularly useful to understand complex adaptive systems; they help social and ecological scientists test hypotheses about human behavior by building artificial societies and virtual human-natural systems. Numerous software suites exist to develop ABMs, such as [NetLogo] and [Repast]. There is also a wide range of computer games that are agent-based models.
 
 ## Why rust-agent-based-models?
 
@@ -87,9 +87,11 @@ Nikolay Kim, [`actix` - Actor framework for Rust](https://github.com/actix/actix
 
 Orson Peters, [`slotmap` - Data structure for Rust](https://github.com/orlp/slotmap)
 
-Wilensky, U. 1999. [NetLogo](http://ccl.northwestern.edu/netlogo/). Center for Connected Learning and Computer-Based Modeling, Northwestern University. Evanston, IL.
+Wilensky, U. 1999. [NetLogo]. Center for Connected Learning and Computer-Based Modeling, Northwestern University. Evanston, IL.
 
 ## References
+
+North, MJ, NT Collier, J Ozik, E Tatara, M Altaweel, CM Macal, M Bragen, and P Sydelko, "Complex Adaptive Systems Modeling with [Repast] Simphony", Complex Adaptive Systems Modeling, Springer, Heidelberg, FRG (2013). https://doi.org/10.1186/2194-3206-1-3
 
 West, Catherine (2018), ["Using Rust for Game Development,"](https://kyren.github.io/2018/09/14/rustconf-talk.html), RustConf 2018 closing keynote.
 
@@ -99,8 +101,10 @@ Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019
 [Cargo's features]:https://doc.rust-lang.org/cargo/reference/features.html
 [Clone]:https://code.visualstudio.com/docs/editor/versioncontrol#_cloning-a-repository
 [FFmpeg]:https://www.ffmpeg.org/download.html
+[NetLogo]:http://ccl.northwestern.edu/netlogo/
 [`plotters`]:https://crates.io/crates/plotters
 [`rayon`]:https://github.com/rayon-rs/rayon
+[Repast]:https://repast.github.io/
 [Rust]:https://www.rust-lang.org
 [Rust (rls) extension]:https://marketplace.visualstudio.com/items?itemName=rust-lang.rust
 [Rust Clippy tool]:https://github.com/rust-lang/rust-clippy
