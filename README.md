@@ -7,9 +7,13 @@ Copyright (C) 2020 Fabio Correa facorread@gmail.com
 https://github.com/facorread/rust-agent-based-models
 https://gitlab.com/facorread/rust-agent-based-models
 
-## Why?
+## What is an agent-based model?
 
-Agent-based models (ABM) are computational tools of complexity science and complex adaptive systems. ABMs are popular in computational social science, also known as generative social science, as they enable scientists test hypotheses about human behavior by building artificial societies. ABMs are also a typical tool to study coupled human and natural systems.
+Agent-based models (ABM) are computer programs that define agents, virtual entities that imitate the decision-making processes and interactions of real people, animals, neurons, etc. An ABM can be useful to understand how a flock of birds is a lot more complicated than just an aggregate of individual birds; each virtual bird can have simple behavior such as trying to fly in close proximity to the nearest neighbor; the ABM then shows that this simple behavior generates the complex, adaptive patterns of flight of real flocks. An ABM can also be useful to model economic behavior: in a group of human agents, those with goods to sell set a price based on their limited information of the market, and those interested in purchasing goods may bargain, based on their own limited information about the market and on how much they are wiling to pay. Even with simple rules, an economic ABM can generate complex patterns that can be useful to understand real macroeconomic trends.
+
+ABMs are computational tools of complexity science; they are particularly useful to understand complex adaptive systems. ABMs help social and ecological scientists test hypotheses about human behavior by building artificial societies and virtual human-natural systems. Numerous software suites exist to develop ABMs.
+
+## Why rust-agent-based-models?
 
 [Rust] is useful to write reliable software for a wide range of applications such as operating systems and embedded systems. Rust does not rely on complicated tools like interpreters or garbage collectors. Rust encourages the developer to use a data-driven coding discipline, by providing a tool called the borrow checker which acts at compile time to prevent code patterns that invalidate memory and send us bug hunting. Fighting with the borrow checker for a little while is a good way to learn good coding practices.
 
