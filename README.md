@@ -23,7 +23,13 @@ After you have used popular frameworks to prototype your ABM, consider using Rus
 
 ## Getting started
 
-Install [Rust], [Visual Studio Code], the [Better TOML extension], the [Rust (rls) extension], the [Rust Clippy tool], and the [FFmpeg] binaries for your operating system. Installation of these packages should be straightforward.
+Consider installing the [Chocolatey] package manager to set up a streamlined upgrade experience. After installing Chocolatey, use the following command:
+
+```powershell
+choco install git jpegview visualstudio-installer visualstudio2019buildtools vscode
+```
+
+This should install [Visual Studio Code], the [FFmpeg] binaries, [git] and [jpegview]. Follow the [Rust] standard installation procedure and then use `rustup` to install the [Rust Clippy tool]. Use Visual Studio Code to install the [Better TOML extension] and the [Rust (rls) extension].
 
 [Clone] this repository (`https://github.com/facorread/rust-agent-based-models.git`) and use your favorite terminal to run `cargo run --release`.
 
@@ -99,9 +105,11 @@ Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019
 
 [Better TOML extension]:https://marketplace.visualstudio.com/items?itemName=bungcip.better-toml
 [Cargo's features]:https://doc.rust-lang.org/cargo/reference/features.html
+[Chocolatey]:https://chocolatey.org/
 [Clone]:https://code.visualstudio.com/docs/editor/versioncontrol#_cloning-a-repository
 [FFmpeg]:https://www.ffmpeg.org/download.html
-[NetLogo]:http://ccl.northwestern.edu/netlogo/
+[jpegview]:https://sourceforge.net/projects/jpegview
+[NetLogo]:http://ccl.northwestern.edu/netlogo
 [`plotters`]:https://crates.io/crates/plotters
 [`rayon`]:https://github.com/rayon-rs/rayon
 [Repast]:https://repast.github.io/
