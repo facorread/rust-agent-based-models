@@ -29,7 +29,7 @@ Consider installing the [Chocolatey] package manager to set up a streamlined upg
 choco install git jpegview visualstudio-installer visualstudio2019buildtools vscode
 ```
 
-This should install [Visual Studio Code], the [FFmpeg] binaries, [git] and [jpegview]. Follow the [Rust] standard installation procedure and then use `rustup` to install the [Rust Clippy tool]. Use Visual Studio Code to install the [Better TOML extension] and the [Rust (rls) extension].
+This should install [Visual Studio Code], the [FFmpeg] binaries, [git], and [jpegview]. Follow the [Rust] standard installation procedure and then use `rustup` to install the [Rust Clippy tool]. Use Visual Studio Code to install the [Better TOML extension] and the [Rust (rls) extension].
 
 [Clone] this repository (`https://github.com/facorread/rust-agent-based-models.git`) and use your favorite terminal to run `cargo run --release`.
 
