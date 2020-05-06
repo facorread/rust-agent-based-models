@@ -108,6 +108,7 @@ Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019
 [Chocolatey]:https://chocolatey.org/
 [Clone]:https://code.visualstudio.com/docs/editor/versioncontrol#_cloning-a-repository
 [FFmpeg]:https://www.ffmpeg.org/download.html
+[git]:http://git-scm.com
 [jpegview]:https://sourceforge.net/projects/jpegview
 [NetLogo]:http://ccl.northwestern.edu/netlogo
 [`plotters`]:https://crates.io/crates/plotters
