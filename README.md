@@ -17,11 +17,13 @@ ABMs are computational tools of complexity science. There is a wide range of sch
 
 [Rust] is useful to write reliable and efficient software for a wide range of applications such as operating systems, high-performance computing, embedded systems, and the Web. Rust does not rely on complicated tools like interpreters or garbage collectors. Rust encourages a data-driven coding discipline informed by the borrow checker, a compile-time tool to maintain memory integrity. Fighting with the borrow checker for a little while is a good strategy to learn good coding practices.
 
-[Entity-Component-System (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) is a software architecture to define agents in computer memory. A vector of `n` health state variables, a vector of `n` energy levels, a vector of `n` body sizes, and a vector of `n` positions exist as four independent data structures implementing `n` entities or agents. While each agent consists of four components, the program performs better by processing agent decisions and interactions independently, focusing on just one or two of the four vectors at a time. The ECS architecture stands in contrast to the more popular [Object-Oriented Programming (OOP)](https://en.wikipedia.org/wiki/Object-oriented_programming) paradigm, which defines only one vector of `n` agents, where each agent implements its four components in the same region of memory.
+[Entity-Component-System (ECS)](https://en.wikipedia.org/wiki/Entity_component_system) is a software architecture to define agents in computer memory. Here is a quick example: a vector of `n` health state variables, a vector of `n` energy levels, a vector of `n` body sizes, and a vector of `n` geographic coordinates exist as four independent data structures implementing `n` entities or agents. The first agent in the system has an index 0, and its four components are `health[0]`, `energy[0]`, `volume[0]`, `coord[0]`. Each agent consists of four components maintained in separate memory regions. The program performs better by processing agent decisions and interactions independently, focusing on just one or two of the four vectors at a time; this is a significant memory speedup. The ECS architecture stands in contrast to the more popular [Object-Oriented Programming (OOP)](https://en.wikipedia.org/wiki/Object-oriented_programming) paradigm, which defines only one vector of `n` agents, where each agent has its four components in the same region of memory.
 
-You might want to consider using an ECS architecture for your ABM. ECS is a popular design in video games, based on its superior performance and capacity to adapt and grow with the ever-changing dynamics of engineering such complicated pieces of software. ABMs can benefit from this design as well, as an ABM should be ready to pursue new avenues of discovery and innovation. Catherine West's presentation, ["Using Rust for Game Development,"](https://kyren.github.io/2018/09/14/rustconf-talk.html) provides the rationale and the broad strokes of an ECS architecture in Rust. This repository implements an agent-based model as an entity-component system that defines a group of agents, a landscape, and an infectious disease. This ABM tries to make the most of the borrow checker and aims to keep complications at a minimum. The ABM does not encapsulate or hide model components; instead, all model code resides at ```main()```. As the model grows and evolves, I want to focus on complexity science as opposed to writing and deleting modules, interfaces, or traits to neatly "organize" my data. I have tried that in the past with the OOP paradigm on C++ and I never managed to get it right. Take a look at ```main.rs``` and ask the question, what proportion of this software is about the science, and what proportion is about managing memory and other housekeeping?
+ECS is a popular design in video games, based on its superior performance and its capacity to adapt to the dynamics of engineering such complicated pieces of software. Catherine West's presentation, ["Using Rust for Game Development,"](https://kyren.github.io/2018/09/14/rustconf-talk.html) provides the rationale and the broad strokes of an ECS architecture in Rust.
 
-After you have used [NetLogo], [Repast], or other popular frameworks to prototype your ABM, consider using Rust over C or C++ to implement the high-performance version of your ABM. Maybe you would like to try Rust for prototyping as well.
+The ECS architecture can give your ABM the flexibility to help you focus on discovery and innovation. This repository implements an agent-based model as an entity-component system that defines a group of agents, a landscape, and an infectious disease. This ABM makes the most of the borrow checker and keeps complications to a minimum. The ABM does not encapsulate or hide model components; instead, all model code resides at ```main()```. As the model grows and evolves, you want to focus on complexity science as opposed to writing and deleting modules, interfaces, or traits to neatly "organize" the model. I have years of experience with the OOP paradigm on C++ and I never managed to get it right. Take a look at ```main.rs``` and ask the question, what proportion of this software is about the science, and what proportion is about managing memory and other housekeeping?
+
+After you have prototyped your ABM on [NetLogo], [Repast], or other popular framework, consider using an ECS design for your high-performance ABM on Rust. Why not use Rust for your whole workflow?
 
 ## Getting started
 
@@ -31,9 +33,9 @@ Consider installing the [Chocolatey] package manager to set up a streamlined upg
 choco install git jpegview visualstudio-installer visualstudio2019buildtools vscode
 ```
 
-This should install [Visual Studio Code], the [FFmpeg] binaries, [git], and [jpegview]. Follow the [Rust] standard installation procedure and then use `rustup` to install the [Rust Clippy tool]. Use Visual Studio Code to install the [Better TOML extension] and the [Rust (rls) extension].
+This should set you up with [Visual Studio Code], the [FFmpeg] binaries, [git], and [jpegview]. Follow the [Rust] standard installation procedure and then use `rustup` to install the [Rust Clippy tool]. Use Visual Studio Code to install the [Better TOML extension] and the [Rust (rls) extension].
 
-[Clone] this repository (`https://github.com/facorread/rust-agent-based-models.git`) and use your favorite terminal to run `cargo run --release`.
+[Clone this repository] (`https://github.com/facorread/rust-agent-based-models.git`) and use your favorite terminal to run `cargo run --release`. Follow the instructions on screen.
 
 The code is an exaggerated example of an infectious model; it implements an infectious disease transmitting between agents, between agents and cells, and across cells.
 
@@ -51,7 +53,7 @@ Please send me a short email to let me know if you find any of these ideas usefu
 
 ## Advanced usage
 
-This software uses [Cargo's features] and [Rust's conditional compilation] to enable and disable graphics, social network, and landscape. By default, `cargo.toml` activates the `all-graphics` feature. This default is the best option for most cases. This is also the only configuration that undergoes automated testing at GitHub and GitLab.
+This software uses [Cargo's features] and [Rust's conditional compilation] to enable and disable graphics, the social network, and the landscape. By default, `cargo.toml` activates the `all-graphics` feature. This default is the best option for most cases. This is also the only configuration that undergoes automated testing at GitHub and GitLab.
 
 The selections made at `cargo.toml` enable or disable code at `main.rs` through the `#[cfg(feature = )]` attributes. For example, `#[cfg(feature = "net")]` in `main.rs` enables the social network, including the `links` container and the network dynamics. It is useful to be able to turn the network off when development focuses on the landscape or other aspect of the model. By turning the network on or off, and re-running the program, it is possible to catch errors, compare component dynamics, and visualize different component outcomes. Turning off unnecessary components can also speed up the model. For example, activating `default = ["no-graphics"]` in `Cargo.toml` is useful to perform a parameter sweep on thousands of scenarios and save simulated data in `csv` format without producing numerous `png` images.
 
@@ -108,7 +110,7 @@ Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019
 [Better TOML extension]:https://marketplace.visualstudio.com/items?itemName=bungcip.better-toml
 [Cargo's features]:https://doc.rust-lang.org/cargo/reference/features.html
 [Chocolatey]:https://chocolatey.org/
-[Clone]:https://code.visualstudio.com/docs/editor/versioncontrol#_cloning-a-repository
+[Clone this repository]:https://code.visualstudio.com/docs/editor/versioncontrol#_cloning-a-repository
 [FFmpeg]:https://www.ffmpeg.org/download.html
 [git]:http://git-scm.com
 [jpegview]:https://sourceforge.net/projects/jpegview
