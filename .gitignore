@@ -4,8 +4,10 @@
 **/*.rs.bk
 Cargo.lock
 *.csv
+*.diff
 *.log
 *.mkv
+*.patch
 *.png
 *.tmp
 *.tmp.rs
