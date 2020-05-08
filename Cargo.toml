@@ -18,7 +18,7 @@ landscape = [] # Enable the landscape
 net = [] # Enable social networks
 
 [dependencies]
-plotters = "0.2.12"
+plotters = "0.2.14"
 rand =  "0.7.3"
 rand_distr = "0.2.2"
 rayon = "1.3.0"
