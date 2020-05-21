@@ -173,6 +173,10 @@ fn main() {
             scenario.infection_probability = infection_probability;
             id += 1;
         }
+        assert!(
+            scenarios_iter.next().is_none(),
+            "checking that all scenarios are initialized"
+        )
     }
     let clean_term =
         "\r                                                                         \r";
