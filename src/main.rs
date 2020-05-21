@@ -185,7 +185,11 @@ fn main() {
     scenarios
         .par_iter_mut()
         .for_each(|scenario: &mut Scenario| {
-            let mut rng = rand::thread_rng();
+            // Use Pcg64 for reproducible random numbers; change to thread_rng for production
+            // let mut rng = rand::thread_rng();
+            #[allow(clippy::unreadable_literal)]
+            let mut rng =
+                rand_pcg::Pcg64::new(0xcafef00dd15ea5e5, 0xa02bdbf7bb3c0a7ac28fa16a64abf96);
             // Model state: Agent health
             let mut health = SlotMap::with_capacity_and_key(2 * n0);
             // Model state: Bidirectional links between agents
