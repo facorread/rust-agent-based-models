@@ -29,7 +29,7 @@ use slotmap::{SecondaryMap, SlotMap};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 // use std::fmt::Write as FmtWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
-#[cfg(feature = "time-series")]
+#[cfg(feature = "csv-output")]
 use std::io::Write as IoWrite; // See https://doc.rust-lang.org/std/macro.writeln.html
 #[cfg(feature = "landscape")]
 use wrapping_coords2d::WrappingCoords2d;
@@ -53,22 +53,22 @@ struct TimeStepResults {
     /// Time step
     time_step: u32,
     /// Number of agents
-    #[cfg(any(feature = "graphics", feature = "time-series"))]
+    #[cfg(feature = "agent-metrics")]
     n: u32,
     /// Susceptibles
-    #[cfg(any(feature = "graphics", feature = "time-series"))]
+    #[cfg(feature = "agent-metrics")]
     s: u32,
     /// Infected
-    #[cfg(any(feature = "graphics", feature = "time-series"))]
+    #[cfg(feature = "agent-metrics")]
     i: u32,
     /// Maximum network degree of susceptibles
-    #[cfg(feature = "net")]
+    #[cfg(feature = "net-metrics")]
     d_s: i32,
     /// Maximum network degree of infectious
-    #[cfg(feature = "net")]
+    #[cfg(feature = "net-metrics")]
     d_i: i32,
     /// Infected cells
-    #[cfg(any(feature = "landscape-graphics", feature = "time-series"))]
+    #[cfg(feature = "landscape-metrics")]
     c_i: u32,
     /// Histogram of network degrees
     #[cfg(feature = "net-graphics")]
@@ -292,7 +292,7 @@ fn main() {
                             }
                         });
                     // Model measurements: Network
-                    #[cfg(any(feature = "net-graphics", all(feature = "net", feature = "time-series")))]
+                    #[cfg(feature = "net-metrics")]
                     {
                         time_step_results.d_s = match keys_vec
                             .iter()
@@ -313,7 +313,7 @@ fn main() {
                             None => 0,
                         };
                     }
-                    #[cfg(feature = "graphics")]
+                    #[cfg(feature = "net-graphics")]
                     {
                         for weight in weights_vec {
                             *time_step_results
@@ -336,7 +336,7 @@ fn main() {
                 // Model measurements: agents
                 {
                     time_step_results.time_step = time_step as u32;
-                    #[cfg(any(feature = "graphics", feature = "time-series"))]
+                    #[cfg(feature = "agent-metrics")]
                     {
                         time_step_results.n = health.len() as u32;
                         health.values().for_each(|h| match h {
@@ -344,7 +344,7 @@ fn main() {
                             Health::I => time_step_results.i += 1,
                         });
                     }
-                    #[cfg(any(feature = "landscape-graphics", feature = "time-series"))]
+                    #[cfg(feature = "landscape-metrics")]
                     {
                         time_step_results.c_i =
                             cell_health.iter().filter(|&&h| h == Health::I).count() as u32;
@@ -485,47 +485,47 @@ fn main() {
     let mut histogram_max_degree = 0;
     #[cfg(feature = "net-graphics")]
     let mut histogram_height = 0;
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     let ts_name = "ts.csv";
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     let ts_err = &*format!("Error writing time series output file {}", ts_name);
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     let ts_path = std::path::Path::new(ts_name);
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     if ts_path.exists() {
         panic!(
             "This program just tried to rewrite {}; please debug",
             ts_name
         );
     }
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     let mut ts_file = fs::File::create(ts_path).expect(ts_err);
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     {
         write!(&mut ts_file, "Infection Probability").expect(ts_err);
         write!(&mut ts_file, ",Time step").expect(ts_err);
-        #[cfg(feature = "net")]
+        #[cfg(feature = "net-csv")]
         {
             write!(&mut ts_file, ",d_s Maximum network degree of susceptibles").expect(ts_err);
             write!(&mut ts_file, ",d_i Maximum network degree of infectious").expect(ts_err);
         }
-        #[cfg(feature = "landscape")]
+        #[cfg(feature = "landscape-csv")]
         write!(&mut ts_file, ",c_i Infected cells").expect(ts_err);
         write!(&mut ts_file, ",n Number of agents").expect(ts_err);
         write!(&mut ts_file, ",s Susceptibles").expect(ts_err);
         writeln!(&mut ts_file, ",i Infected").expect(ts_err);
     }
     scenarios.iter().for_each(|scenario| {
-        #[cfg(feature = "time-series")]
+        #[cfg(feature = "csv-output")]
         scenario.time_series.iter().for_each(|time_step_results| {
             write!(&mut ts_file, "{}", scenario.infection_probability).expect(ts_err);
             write!(&mut ts_file, ",{}", time_step_results.time_step).expect(ts_err);
-            #[cfg(feature = "net")]
+            #[cfg(feature = "net-csv")]
             {
                 write!(&mut ts_file, ",{}", time_step_results.d_s).expect(ts_err);
                 write!(&mut ts_file, ",{}", time_step_results.d_i).expect(ts_err);
             }
-            #[cfg(feature = "landscape")]
+            #[cfg(feature = "landscape-csv")]
             write!(&mut ts_file, ",{}", time_step_results.c_i).expect(ts_err);
             write!(&mut ts_file, ",{}", time_step_results.n).expect(ts_err);
             write!(&mut ts_file, ",{}", time_step_results.s).expect(ts_err);
@@ -557,7 +557,7 @@ fn main() {
             }
         }
     });
-    #[cfg(feature = "time-series")]
+    #[cfg(feature = "csv-output")]
     eprintln!("{}Time series saved to {}.", clean_term, ts_name);
     #[cfg(feature = "graphics")]
     #[allow(unused_variables)]

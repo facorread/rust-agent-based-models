@@ -7,16 +7,31 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["all-graphics"] # Rust performs tests using these features only. You are on your own when using different features.
-# default = ["no-graphics"] # Activate this for a high performance model that only outputs tables, no graphics.
-all-graphics = ["landscape-graphics", "net-graphics", "time-series"]
-no-graphics = ["landscape", "net", "time-series"]
-landscape-graphics = ["landscape", "graphics"]
-net-graphics = ["net", "graphics"]
-graphics = [] # Enable figure outputs
+default = ["all-graphics", "csv-output"] # This sofware comes with all features activated: landscape and networks with figures and csv output
+example = ["landscape-graphics", "net"] # This example differs in that there are no figures or csv output for networks; the model has networks, tough
+all-graphics = ["landscape-graphics", "net-graphics"]
+csv-output = ["agent-metrics", "landscape-csv", "net-csv"] # csv outputs describe agents by default. List additional outputs here.
+
+landscape-graphics = ["landscape-metrics", "graphics"]
+net-graphics = ["net-metrics", "graphics"]
+
+landscape-csv = ["landscape-metrics"]
+net-csv = ["net-metrics"]
+
+# The following features use memory; enable those that are strictly necessary.
+graphics = ["agent-metrics"] # Enable figures; by default, figures describe agents only.
+agent-metrics = [] # Accumulate metrics from agents
+landscape-metrics = ["landscape"] # Accumulate metrics from the landscape
+net-metrics = ["net"] # Accumulate metrics from the social network
+
+# The following features consume CPU time; enable those that are strictly necessary.
 landscape = [] # Enable the landscape
 net = [] # Enable social networks
-time-series = [] # Output time series in CSV format
+
+#[cfg(any(feature = "landscape-graphics", all(feature = "csv-output", feature = "landscape")))]
+# Consider this use case: Duplicate the above line to apply it to a new member of struct TimeStepResults; this new member is an outcome
+# of the net feature, so you change "landscape" to "net" by hand. You thought that the word "landscape" occurs only once in the line,
+# so you have inadvertedly caused an error. The landscape-csv feature exists to prevent this error.
 
 [dependencies]
 plotters = "0.2"
