@@ -708,12 +708,12 @@ fn main() {
                                 .y_label_area_size(y_label_area_size)
                                 .margin(figure_margin)
                                 .caption("Network degree of agents", text0.clone())
-                                .build_ranged(x_range, 0..histogram_height)
+                                .build_cartesian_2d(x_range, 0..histogram_height)
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_1(&color02)
-                                .line_style_2(&color01)
+                                .light_line_style(&color01)
+                                .bold_line_style(&color02)
                                 .y_desc("Number of agents")
                                 .x_desc(if compress_histogram {
                                     "Network degree (removing zeroes)"
@@ -791,15 +791,15 @@ fn main() {
                                 .y_label_area_size(y_label_area_size)
                                 .margin(figure_margin)
                                 .caption("Populations of agents", text0.clone())
-                                .build_ranged(
+                                .build_cartesian_2d(
                                     0..(time_series_len as u32),
                                     0..agent_time_series_height,
                                 )
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_1(&color02)
-                                .line_style_2(&color01)
+                                .light_line_style(&color01)
+                                .bold_line_style(&color02)
                                 .y_desc("Number of agents")
                                 .x_desc("Time")
                                 .axis_style(color0)
@@ -885,15 +885,15 @@ fn main() {
                                 .y_label_area_size(y_label_area_size)
                                 .margin(figure_margin)
                                 .caption("Infection of cells", text0.clone())
-                                .build_ranged(
+                                .build_cartesian_2d(
                                     0..(time_series_len as u32),
                                     0..cell_time_series_height,
                                 )
                                 .unwrap();
                             chart
                                 .configure_mesh()
-                                .line_style_1(&color02)
-                                .line_style_2(&color01)
+                                .light_line_style(&color01)
+                                .bold_line_style(&color02)
                                 .y_desc("Number of infected cells")
                                 .x_desc("Time")
                                 .axis_style(color0)
