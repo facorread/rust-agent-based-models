@@ -35,9 +35,9 @@ net = [] # Enable social networks
 
 [dependencies]
 plotters = "0.3"
-rand =  "0.7"
-rand_distr = "0.3"
-rand_pcg = "0.2"
-rayon = "1.5"
-slotmap = "0.4"
-wrapping_coords2d = "0.1"
+rand =  "0.7.3"
+rand_distr = "0.3.0"
+rand_pcg = "0.2.1"
+rayon = "1.5.0"
+slotmap = "0.4.0"
+wrapping_coords2d = "0.1.9"
