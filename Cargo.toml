@@ -34,7 +34,7 @@ net = [] # Enable social networks
 # so you have inadvertedly caused an error. The landscape-csv feature exists to prevent this error.
 
 [dependencies]
-plotters = "0.3"
+plotters = "0.3.0"
 rand =  "0.7.3"
 rand_distr = "0.3.0"
 rand_pcg = "0.2.1"
