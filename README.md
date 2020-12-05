@@ -5,6 +5,7 @@ Reliable and efficient agent-based models in Rust
 Copyright (C) 2020 Fabio Correa facorread@gmail.com
 
 https://github.com/facorread/rust-agent-based-models
+
 https://gitlab.com/facorread/rust-agent-based-models
 
 ## What is an agent-based model?
@@ -41,6 +42,8 @@ The code is an exaggerated example of an infectious model; it implements an infe
 
 See an [example video here](https://youtu.be/oYeHyFl1-HY)
 
+Consider using the [wasm-agent-based-models] repository to create interactive versions of your model.
+
 ## What can I do with this software?
 
 Ideally you would fork this repository to build your own model; this would give you easy access to bug fixes and enhancements via `git pull` and `git merge`. As an alternative, you can just copy this code and start an ABM in your own repository. Finally, you can implement the ideas in this repository as part of your own design.
@@ -73,7 +76,7 @@ When the model is ready to work with more scenarios and long time spans, the bes
 
 ## Does this repository use `unsafe` code?
 
-No.
+Not explicitly.
 
 ## The scenarios and time_series data structure does not seem to conform to the ECS design.
 
@@ -123,3 +126,4 @@ Antelmi A., Cordasco G., D’Auria M., De Vinco D., Negro A., Spagnuolo C. (2019
 [Rust Clippy tool]:https://github.com/rust-lang/rust-clippy
 [Rust's conditional compilation]:https://doc.rust-lang.org/reference/conditional-compilation.html
 [Visual Studio Code]:https://code.visualstudio.com/
+[wasm-agent-based-models]:https://github.com/facorread/wasm-agent-based-models
