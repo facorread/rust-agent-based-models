@@ -1,8 +1,28 @@
+#  This file is part of rust-agent-based-models:
+#  Reliable and efficient agent-based models in Rust
+#  
+#   Copyright 2020 Fabio A. Correa Duran facorread@gmail.com
+#  
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#  
+#      http://www.apache.org/licenses/LICENSE-2.0
+#  
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
 [package]
 name = "rust-agent-based-models"
 version = "0.1.0"
 authors = ["Fabio A. Correa Duran <facorread@gmail.com>"]
+description = "Reliable and efficient agent-based models in Rust"
 edition = "2018"
+license = "Apache-2.0"
+repository = "https://github.com/facorread/rust-agent-based-models"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

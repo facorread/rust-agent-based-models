@@ -1,4 +1,5 @@
-/* RustAgentModels: Reliable and efficient agent-based models in Rust
+/* This file is part of rust-agent-based-models:
+   Reliable and efficient agent-based models in Rust
 
     Copyright 2020 Fabio A. Correa Duran facorread@gmail.com
 
@@ -14,6 +15,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
+// Use the tags begin-similar-code and end-similar-code to mark a block of code that is similar between rust-agent-based-models and wasm-agent-based-models.
+// begin-similar-code 0
 
 ///! This software uses the Entity-Component-System (ECS) architecture and other principles discussed at https://kyren.github.io/2018/09/14/rustconf-talk.html
 #[cfg(feature = "graphics")]
@@ -104,6 +108,8 @@ struct Scenario {
     time_series: std::vec::Vec<TimeStepResults>,
 }
 
+// end-similar-code 0
+
 fn main() {
     // Only use one thread to facilitate debugging. One thread makes the program sequential.
     #[cfg(debug_assertions)] // Only when debugging should this instruction happen.
@@ -135,6 +141,7 @@ fn main() {
             }
         }
     }
+    // begin-similar-code 1
     // Model parameter: Initial number of agents
     let n0: usize = 1000;
     // Model parameter: Scale-free network parameter: new links per agent
@@ -154,6 +161,7 @@ fn main() {
     let link_distro = Bernoulli::new(0.01).unwrap();
     let recovery_distro = Bernoulli::new(0.8).unwrap();
     let survival_distro = Bernoulli::new(0.8).unwrap();
+    // end-similar-code 1
     // Model parameter: Last time step of the simulation in each scenario
     let last_time_step = 100u32;
     let time_series_len = last_time_step as usize + 1;
@@ -189,6 +197,7 @@ fn main() {
     scenarios
         .par_iter_mut()
         .for_each(|scenario: &mut Scenario| {
+            // begin-similar-code 2
             // Use Pcg64 for reproducible random numbers; change to thread_rng for production
             // let mut rng = rand::thread_rng();
             #[allow(clippy::unreadable_literal)]
@@ -210,6 +219,7 @@ fn main() {
                 let _k: AgentKey = health.insert(Health::S);
             }
             let infection_distro = Bernoulli::new(scenario.infection_probability).unwrap();
+            // end-similar-code 2
             for (time_step, time_step_results) in scenario.time_series.iter_mut().enumerate() {
                 // Simple, fast models do not need to print the time_step. Printing is slow.
                 if time_step % 50 == 0 {
@@ -218,6 +228,7 @@ fn main() {
                         clean_term, scenario.infection_probability, time_step
                     );
                 }
+                // begin-similar-code 3
                 // Initialization of this time step: Network seed
                 #[cfg(feature = "net")]
                 {
@@ -472,9 +483,11 @@ fn main() {
                 for _ in 0..nb {
                     health.insert(Health::S);
                 }
+                // end-similar-code 3
             }
         });
     eprint!("{}Simulation complete. Saving to disk... ", clean_term);
+    // begin-similar-code 4
     #[cfg(feature = "graphics")]
     let mut agent_time_series_height = 0;
     #[cfg(feature = "landscape-graphics")]
@@ -485,6 +498,7 @@ fn main() {
     let mut histogram_max_degree = 0;
     #[cfg(feature = "net-graphics")]
     let mut histogram_height = 0;
+    // end-similar-code 4
     #[cfg(feature = "csv-output")]
     let ts_name = "ts.csv";
     #[cfg(feature = "csv-output")]
@@ -531,6 +545,7 @@ fn main() {
             write!(&mut ts_file, ",{}", time_step_results.s).expect(ts_err);
             writeln!(&mut ts_file, ",{}", time_step_results.i).expect(ts_err);
         });
+        // begin-similar-code 5
         #[cfg(feature = "graphics")]
         {
             #[cfg(feature = "net-graphics")]
@@ -556,12 +571,14 @@ fn main() {
                 cell_time_series_height = scenario.cell_time_series_height;
             }
         }
+        // end-similar-code 5
     });
     #[cfg(feature = "csv-output")]
     eprintln!("{}Time series saved to {}.", clean_term, ts_name);
     #[cfg(feature = "graphics")]
     #[allow(unused_variables)]
     {
+        // begin-similar-code 6
         #[cfg(feature = "net-graphics")]
         {
             if compress_histogram {
@@ -595,6 +612,7 @@ fn main() {
         #[cfg(feature = "net-graphics")]
         let x_label_offset = 1;
         let y_label_area_size = 60;
+        // end-similar-code 6
         scenarios.iter().for_each(|scenario| {
             eprint!(
                 "{}Creating figures for scenario {}/{}... ",
@@ -625,6 +643,7 @@ fn main() {
                         }
                         let drawing_area =
                             BitMapBackend::new(figure_path, (1920, 1080)).into_drawing_area();
+                        // begin-similar-code 7
                         let background_color = if dark_figures { &BLACK } else { &WHITE };
                         let transparent_color = background_color.mix(0.);
                         let color0 = if dark_figures { &WHITE } else { &BLACK };
@@ -946,6 +965,7 @@ fn main() {
                                     .unwrap();
                                 });
                         }
+                        // end-similar-code 7
                     }
                 });
         });
