@@ -68,13 +68,13 @@ Generally speaking, the code for an ABM is tightly integrated; take a NetLogo mo
 
 Some individual components of an ABM can exist in independent crates. One of them is Orson Peters' [`slotmap`](https://github.com/orlp/slotmap), an efficient memory manager that reuses space left behind by dying agents. The other is my [`wrapping_coords2d`](https://crates.io/crates/wrapping_coords2d) crate, a utility to manage the landscape by mapping a 2D grid of cells into a vector. Both x and y coordinates wrap around the limits of the grid. As an alternative, you can use [`ameda`](https://docs.rs/ameda/latest/ameda) to manage the landscape without wrapping.
 
-## Why is the software so slow?
+## Why is this software so slow?
 
 By default, [Visual Studio Code] runs the program using the `debug` profile. The profile provides vscode with the essential information to examine and step into model code and memory; in this profile, the [`plotters`] crate conducts a multitude of checks for memory and data safety to carefully produce the model figures; this takes significant time and makes the software slow. To improve development time, model protoypes should use very few scenarios and a short time span. Alternatively, a `return()` instruction can exit the program before producing any figures. Finally, the `no-graphics` feature can be activated in `cargo.toml`. See the *Advanced usage* section above for more details.
 
 When the model is ready to work with more scenarios and long time spans, the best option is to use the `release` profile. For this, the command `cargo run --release` can run on the Command Prompt, PowerShell, or the [Visual Studio Code] console. This profile produces figures and output data significantly faster than the `debug` profile.
 
-## Does this repository use `unsafe` code?
+## Does this software use `unsafe` code?
 
 Not explicitly.
 
