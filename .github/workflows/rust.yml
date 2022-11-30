@@ -1,6 +1,6 @@
 name: Rust
 
-on: [push]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose
